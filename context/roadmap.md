@@ -1,0 +1,51 @@
+# Roadmap
+
+Active and near-term work for `omni_tools`. The package is at the
+start of its life — the roadmap right now is the path to a first
+release with the four reference tools in place.
+
+This is a live document. Add to it freely; clean it up as items land
+or get rethought.
+
+---
+
+## Scheduled
+
+### Initial four tools
+
+The package's whole scope, in the order we're likely to tackle them.
+Two are ports of working code from another project; two need design
+work first.
+
+- **`Omni.Tools.FileSystem`** — port the existing implementation.
+  Review the configuration surface (base dir, scope modes), tighten
+  the description for model consumption, and align the test shape
+  with the conventions in `CLAUDE.md`. Likely the first tool to land
+  end-to-end since the design is settled.
+
+- **`Omni.Tools.Repl`** — port the existing implementation. Same
+  review/tweak pass as FileSystem, with extra attention to the
+  extension mechanism (it's the most novel surface) and to the
+  documented safety boundary (the REPL is best-effort sandboxing,
+  not a security primitive).
+
+- **`Omni.Tools.Bash`** — design pass, then implementation. Open
+  questions captured in `context/design.md § 3.3`: configuration
+  surface, single-tool vs. family, streaming output, safety boundary
+  story. Worth a short written design before code.
+
+- **`Omni.Tools.WebFetch`** — design pass, then implementation. Open
+  questions in `context/design.md § 3.4`: Markdown converter choice,
+  simplification aggressiveness, batch shape, limit semantics.
+
+No fixed ordering between Bash and WebFetch; the two ports come
+first because they unblock real usage.
+
+---
+
+## Parked ideas
+
+Open questions worth thinking about before committing to a shape.
+Not scheduled.
+
+*(Empty for now — add as ideas surface during implementation.)*
