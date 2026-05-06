@@ -99,9 +99,11 @@ clean, maintainable reference — not an open-ended toolbox.
   `FileSystem` exposing whether writes are allowed).
 - Return strings or simple maps from `call`. The tool result content
   must serialize cleanly when round-tripped through a dialect.
-- On failure, prefer returning a string error result (the model can
-  reason about it and retry) over raising. Raise only for programmer
-  errors that should crash the agent.
+- On failure, raise. Omni's tool executor catches the exception and
+  feeds it back to the model as a tool error, so the loop continues
+  and the model can react. Return values are successful tool results;
+  raised errors are tool errors. Don't invent `{:ok, _}` / `{:error, _}`
+  tuples or string error results at the `call/1`/`call/2` boundary.
 
 ### Terminology
 
