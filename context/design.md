@@ -58,26 +58,69 @@ fleshed out as it lands.
 
 ### 3.1 `Omni.Tools.FileSystem`
 
-CRUD operations against a configurable base directory. Existing
-implementation in another project — work here is **port, review,
-tweak**.
+CRUD operations scoped to a configurable base directory.
 
-Intent:
+#### Module layout
 
-- Configurable **base directory** that anchors all paths; relative
-  paths in tool calls resolve under it; absolute or `..`-escaping
-  paths are rejected.
-- Configurable **scope mode** controlling what operations are
-  available:
-  - `:read_only` — read and list only.
-  - `:flat` — read/write within the base, no subdirectories.
-  - `:nested` — read/write across the full subtree.
-- A single tool surface with sub-operations (read, write, list,
-  delete, etc.) selected by argument, rather than one tool per
-  operation. The exact split (single tool vs. small family) gets
-  finalised during the port.
-- Description tuning via `description/1` so the model knows which
-  operations are actually available in the current configuration.
+```
+lib/omni/tools/file_system.ex          # Omni.Tool implementation (thin)
+lib/omni/tools/file_system/fs.ex       # %FS{} + path resolution + file ops
+lib/omni/tools/file_system/entry.ex    # %Entry{} result struct
+```
+
+**`Omni.Tools.FileSystem`** — the tool module. `use Omni.Tool`,
+`init/1`, `schema/1`, `description/1`, `call/2`. Thin; delegates to
+`FS` for all real work.
+
+**`Omni.Tools.FileSystem.FS`** — the public, reusable filesystem API.
+Carries the `%FS{}` struct (base dir, mode flags), path resolution,
+and all file operations (`read`, `write`, `list`, `patch`, `delete`).
+Independently usable without the tool machinery.
+
+**`Omni.Tools.FileSystem.Entry`** — result struct returned by write,
+patch, and list operations. Fields: `id`, `filename`, `media_type`,
+`size`, `mtime`.
+
+#### Configuration
+
+Two orthogonal booleans on `FS.new/1` (passed through from
+`Tool.new/1` → `init/1`):
+
+| Option       | Default | Effect                                                     |
+| ------------ | ------- | ---------------------------------------------------------- |
+| `:base_dir`  | (req'd) | Absolute path. Must already exist.                         |
+| `:read_only` | `false` | When `true`, only `read` and `list` are available.         |
+| `:nested`    | `true`  | When `false` (flat), paths cannot contain path separators. |
+
+#### Path policy
+
+- Relative only. Rejects absolute (`/foo`, `~/foo`), any `..`
+  segment, null bytes.
+- Dotfiles and dot-directories are allowed and listed.
+- In flat mode, path separators (`/`, `\`) are additionally rejected.
+- On write in nested mode, parent directories are created
+  automatically.
+
+#### Operations
+
+All operations return ok/error tuples from `FS`. The tool's `call/2`
+raises on errors so the model sees tool errors.
+
+- `read(fs, id)` → `{:ok, binary}` | `{:error, reason}`
+- `write(fs, id, content)` → `{:ok, Entry.t}` | `{:error, reason}`
+- `patch(fs, id, search, replace)` → `{:ok, Entry.t}` | `{:error, reason}`.
+  Unique-required: errors if zero or >1 matches.
+- `list(fs)` → `{:ok, [Entry.t]}`. Recursive in nested mode, flat
+  in flat mode. Sorted by id.
+- `delete(fs, id)` → `:ok` | `{:error, reason}`
+
+#### Known boundaries
+
+- Symlinks: follows them (inherits `File.*` behaviour). Not a
+  security boundary.
+- No size cap on read. No locking. No subdirectory filtering on list.
+- Empty parent directories left behind after delete (invisible to
+  list, which only returns files).
 
 ### 3.2 `Omni.Tools.Repl`
 

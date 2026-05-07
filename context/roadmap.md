@@ -17,17 +17,15 @@ The package's whole scope, in the order we're likely to tackle them.
 Two are ports of working code from another project; two need design
 work first.
 
-- **`Omni.Tools.FileSystem`** — port the existing implementation.
-  Review the configuration surface (base dir, scope modes), tighten
-  the description for model consumption, and align the test shape
-  with the conventions in `CLAUDE.md`. Likely the first tool to land
-  end-to-end since the design is settled.
+- ~~**`Omni.Tools.FileSystem`**~~ — **done.** Ported, reviewed, and
+  tested. See `context/design.md § 3.1` for the implemented contract
+  and `context/file_system_plan.md` for the original plan.
 
-- **`Omni.Tools.Repl`** — port the existing implementation. Same
-  review/tweak pass as FileSystem, with extra attention to the
-  extension mechanism (it's the most novel surface) and to the
-  documented safety boundary (the REPL is best-effort sandboxing,
-  not a security primitive).
+- **`Omni.Tools.Repl`** — port the existing implementation. Now
+  unblocked. Same review/tweak pass as FileSystem, with extra
+  attention to the extension mechanism (it's the most novel surface)
+  and to the documented safety boundary (the REPL is best-effort
+  sandboxing, not a security primitive).
 
 - **`Omni.Tools.Bash`** — design pass, then implementation. Open
   questions captured in `context/design.md § 3.3`: configuration

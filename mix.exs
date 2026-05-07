@@ -31,7 +31,8 @@ defmodule Omni.Tools.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:omni, "~> 1.3.0"},
+      {:omni, github: "aaronrussell/omni"},
+      {:mime, "~> 2.0"},
 
       # dev dependencies
       {:ex_doc, "~> 0.40.1", only: :dev, runtime: false, warn_if_outdated: true}
