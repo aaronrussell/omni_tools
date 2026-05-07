@@ -157,10 +157,11 @@ defmodule Omni.Tools.FileSystem.FS do
   """
   @spec list(t()) :: {:ok, [Entry.t()]}
   def list(%__MODULE__{} = fs) do
-    paths = case fs.nested? do
-      true -> list_recursive(fs.base_dir)
-      false -> list_flat(fs.base_dir)
-    end
+    paths =
+      case fs.nested? do
+        true -> list_recursive(fs.base_dir)
+        false -> list_flat(fs.base_dir)
+      end
 
     entries =
       paths

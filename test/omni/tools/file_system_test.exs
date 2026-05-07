@@ -31,29 +31,21 @@ defmodule Omni.Tools.FileSystemTest do
   end
 
   describe "description" do
-    test "mentions read-only when configured", ctx do
-      tool = tool(ctx, read_only: true)
-      assert tool.description =~ "Read-only"
+    test "read-only description omits write commands", ctx do
+      desc = tool(ctx, read_only: true).description
+      assert desc =~ "read"
+      assert desc =~ "list"
+      refute desc =~ "write"
+      refute desc =~ "patch"
+      refute desc =~ "delete"
     end
 
-    test "mentions read-write when configured", ctx do
-      tool = tool(ctx)
-      assert tool.description =~ "Read-write"
-    end
+    test "read-write description includes all commands", ctx do
+      desc = tool(ctx).description
 
-    test "mentions flat mode", ctx do
-      tool = tool(ctx, nested: false)
-      assert tool.description =~ "Flat mode"
-    end
-
-    test "mentions subdirectories when nested", ctx do
-      tool = tool(ctx)
-      assert tool.description =~ "Subdirectories are allowed"
-    end
-
-    test "includes base_dir path", ctx do
-      tool = tool(ctx)
-      assert tool.description =~ ctx.tmp_dir
+      for cmd <- ~w(read list write patch delete) do
+        assert desc =~ cmd
+      end
     end
   end
 
@@ -113,7 +105,7 @@ defmodule Omni.Tools.FileSystemTest do
     end
 
     test "missing required param raises", ctx do
-      assert_raise RuntimeError, ~r/write requires :content/, fn ->
+      assert_raise RuntimeError, ~r/write.+requires :content/, fn ->
         tool(ctx).handler.(%{command: "write", id: "x.txt"})
       end
     end

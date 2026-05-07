@@ -17,14 +17,12 @@ defmodule Omni.Tools.FileSystem do
 
   ## Options
 
-    * `:base_dir` (required) — absolute path to an existing directory.
-    * `:read_only` — restricts to `read` and `list` only. Default `false`.
-    * `:nested` — allows subdirectory paths in ids. Default `true`.
+  - `:base_dir` (required) — absolute path to an existing directory.
+  - `:read_only` — restricts to `read` and `list` only. Default `false`.
+  - `:nested` — allows subdirectory paths in ids. Default `true`.
   """
 
-  use Omni.Tool,
-    name: "file_system",
-    description: "File operations scoped to a base directory."
+  use Omni.Tool, name: "file_system"
 
   alias Omni.Tools.FileSystem.FS
 
@@ -65,107 +63,118 @@ defmodule Omni.Tools.FileSystem do
 
   @impl Omni.Tool
   def description(%FS{} = fs) do
-    mode =
-      cond do
-        fs.read_only? -> "Read-only access"
-        true -> "Read-write access"
+    intro =
+      if fs.read_only? do
+        """
+        Browse and read files on demand from a directory of reference material.
+
+        Read-only access. Available commands: read, list
+        """
+      else
+        """
+        Create and manage persistent files that you author directly: markdown notes, \
+        HTML pages, data files, reports, code files, SVG graphics. The user can view or download them.
+
+        Read-write access. Available commands: read, list, write, patch, delete
+        """
       end
 
-    path_note =
-      if fs.nested?,
-        do:
-          "Subdirectories are allowed — use forward-slash-separated paths (e.g. \"sub/file.txt\").",
-        else: "Flat mode — only bare filenames are accepted (no subdirectories)."
+    scope =
+      if fs.nested? do
+        "All file paths (`id`) are relative to the base directory. Subdirectories are allowed."
+      else
+        "All file names (`id`) are bare filenames only (no subdirectories)."
+      end
+
+    commands = """
+    - **read** — returns the file content. Requires `id`.
+    - **list** — lists all files with media types and sizes. No arguments.
+    """
 
     commands =
       if fs.read_only?,
-        do: "read, list",
-        else: "read, list, write, patch, delete"
+        do: commands,
+        else:
+          commands <>
+            """
+            - **write** — creates or overwrites a file. Requires `id` and `content`.
+            - **patch** — targeted find-and-replace. Requires `id`, `search`, and `replace`. \
+            The `search` string must appear exactly once in the file — if it matches zero \
+            or multiple times, the operation fails with a diagnostic message.
+            - **delete** — removes a file. Requires `id`.
+
+            ## Prefer patch over write
+            When editing an existing file, always prefer patch for targeted changes. \
+            Only use write to replace an entire file when most of the content is changing. \
+            Ask yourself: can I describe the change as search → replace? If yes, use patch.
+            """
 
     """
-    File operations scoped to #{fs.base_dir}.
+    #{intro}
 
-    #{mode}. Available commands: #{commands}.
-
-    #{path_note}
-
-    All file paths (`id`) are relative to the base directory. Absolute paths, \
-    ".." segments, and null bytes are rejected.
+    File operations are scoped to a base directory. \
+    #{scope} Absolute paths, ".." sqeuences, and null bytes are rejected.
 
     ## Commands
-
-    - **read** — returns the file content. Requires `id`.
-    - **list** — lists all files with media types and sizes. No arguments.\
-    #{unless fs.read_only? do
-      """
-
-      - **write** — creates or overwrites a file. Requires `id` and `content`.
-      - **patch** — targeted find-and-replace. Requires `id`, `search`, and `replace`. \
-      The `search` string must appear exactly once in the file — if it matches zero \
-      or multiple times, the operation fails with a diagnostic message. Prefer patch \
-      over write for targeted edits.
-      - **delete** — removes a file. Requires `id`.\
-      """
-    end}
+    #{commands}
     """
   end
 
   @impl Omni.Tool
-  def call(input, %FS{} = fs) do
-    case input.command do
-      "read" ->
-        id = fetch!(input, :id, "read")
+  def call(%{command: "read"} = input, %FS{} = fs) do
+    id = fetch!(input, :id, "read")
 
-        case FS.read(fs, id) do
-          {:ok, content} -> content
-          {:error, reason} -> raise format_error(reason, id)
-        end
+    case FS.read(fs, id) do
+      {:ok, content} -> content
+      {:error, reason} -> raise format_error(reason, id)
+    end
+  end
 
-      "list" ->
-        {:ok, entries} = FS.list(fs)
+  def call(%{command: "list"}, %FS{} = fs) do
+    case FS.list(fs) do
+      {:ok, []} ->
+        "No files"
 
-        case entries do
-          [] ->
-            "No files"
+      {:ok, entries} ->
+        Enum.map_join(entries, "\n", fn e ->
+          "#{e.id} (#{e.media_type}, #{e.size} bytes)"
+        end)
+    end
+  end
 
-          entries ->
-            Enum.map_join(entries, "\n", fn e ->
-              "#{e.id} (#{e.media_type}, #{e.size} bytes)"
-            end)
-        end
+  def call(%{command: "write"} = input, %FS{} = fs) do
+    id = fetch!(input, :id, "write")
+    content = fetch!(input, :content, "write")
 
-      "write" ->
-        id = fetch!(input, :id, "write")
-        content = fetch!(input, :content, "write")
+    case FS.write(fs, id, content) do
+      {:ok, entry} -> "Wrote #{entry.id} (#{entry.size} bytes)"
+      {:error, reason} -> raise format_error(reason, id)
+    end
+  end
 
-        case FS.write(fs, id, content) do
-          {:ok, entry} -> "Wrote #{entry.id} (#{entry.size} bytes)"
-          {:error, reason} -> raise format_error(reason, id)
-        end
+  def call(%{command: "patch"} = input, %FS{} = fs) do
+    id = fetch!(input, :id, "patch")
+    search = fetch!(input, :search, "patch")
+    replace = fetch!(input, :replace, "patch")
 
-      "patch" ->
-        id = fetch!(input, :id, "patch")
-        search = fetch!(input, :search, "patch")
-        replace = fetch!(input, :replace, "patch")
+    case FS.patch(fs, id, search, replace) do
+      {:ok, entry} -> "Patched #{entry.id} (#{entry.size} bytes)"
+      {:error, reason} -> raise format_error(reason, id)
+    end
+  end
 
-        case FS.patch(fs, id, search, replace) do
-          {:ok, entry} -> "Patched #{entry.id} (#{entry.size} bytes)"
-          {:error, reason} -> raise format_error(reason, id)
-        end
+  def call(%{command: "delete"} = input, %FS{} = fs) do
+    id = fetch!(input, :id, "delete")
 
-      "delete" ->
-        id = fetch!(input, :id, "delete")
-
-        case FS.delete(fs, id) do
-          :ok -> "Deleted #{id}"
-          {:error, reason} -> raise format_error(reason, id)
-        end
+    case FS.delete(fs, id) do
+      :ok -> "Deleted #{id}"
+      {:error, reason} -> raise format_error(reason, id)
     end
   end
 
   defp fetch!(input, key, command) do
     case Map.get(input, key) do
-      nil -> raise "#{command} requires #{inspect(key)}"
+      nil -> raise "#{command} command requires #{inspect(key)} param"
       value -> value
     end
   end
