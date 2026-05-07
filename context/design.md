@@ -218,22 +218,101 @@ in the tool description shown to the model.
 
 ### 3.3 `Omni.Tools.Bash`
 
-Executes shell commands. **No existing implementation — needs specing
-out.**
+Executes shell commands scoped to a configurable working directory.
 
-Open questions to resolve before any code lands:
+#### Module layout
 
-- What's the configuration surface? Working directory, environment
-  variables, command allowlist or denylist, timeouts, output size
-  caps?
-- Single tool that runs arbitrary commands, or a tool family with
-  separate primitives (run, read-output, kill)?
-- Streaming vs. one-shot? Long-running commands need a story for
-  output capture and cancellation.
-- How to express the safety boundary in the tool description so the
-  model has accurate expectations.
+```
+lib/omni/tools/bash.ex              # Omni.Tool implementation (thin)
+lib/omni/tools/bash/runner.ex       # Port-based execution engine
+```
 
-These get worked out in a design pass before implementation begins.
+**`Omni.Tools.Bash`** — the tool module. `use Omni.Tool`, `init/1`,
+`schema/1`, `description/1`, `call/2`. Thin; delegates to `Runner`
+for all real work.
+
+**`Omni.Tools.Bash.Runner`** — the execution engine. Opens a Port,
+collects output, handles timeouts, applies truncation. Independently
+usable without the tool machinery.
+
+#### Configuration
+
+| Option            | Default         | Effect                                                           |
+| ----------------- | --------------- | ---------------------------------------------------------------- |
+| `:dir`            | (required)      | Working directory. Must exist at init time.                      |
+| `:env`            | `[]`            | Extra env vars as `[{String.t(), String.t()}]`. Merged with inherited env. |
+| `:timeout`        | `30_000`        | Execution timeout in milliseconds. Kills the process on timeout. |
+| `:max_output`     | `50_000`        | Output truncation limit in bytes. Tail-biased, line-snapped.    |
+| `:shell`          | auto-resolved   | `{executable, args}` tuple. Auto: `/bin/bash` then `/bin/sh`.   |
+| `:command_prefix` | `nil`           | String prepended to every command with a newline separator.      |
+
+Timeout and max_output support application config fallback via
+`Application.get_env(:omni_tools, Omni.Tools.Bash)`. Explicit opts
+always take precedence; app config is never required.
+
+#### Shell resolution
+
+At init time, the shell is resolved once and stored in state (so
+`description/1` can report it):
+
+1. Explicit `:shell` option — validated as `{binary, list}` tuple
+2. `/bin/bash` — checked via `File.exists?/1`
+3. `/bin/sh` — always-available fallback
+
+The tool name is "bash" because models generate bashisms; the
+resolution prefers bash to match that expectation. On macOS,
+`/bin/bash` is bash 3.2 (Apple ships the last GPLv2 version) —
+most common bashisms work, but bash 4+ features (associative arrays,
+`&>>`, etc.) do not.
+
+#### Execution model
+
+- **Port-based.** `Port.open({:spawn_executable, shell}, opts)` with
+  `:stderr_to_stdout`. Gives async chunk-by-chunk output for partial
+  capture on timeout.
+- **One command per invocation.** No persistent shell session. Each
+  `call/2` spawns a fresh process.
+- **Monotonic deadline.** Computed once at entry as
+  `System.monotonic_time(:millisecond) + timeout`. Each receive loop
+  iteration uses the remaining time, so a stream of output chunks
+  can't reset the timeout.
+- **Timeout cleanup.** `Port.close/1` sends SIGHUP to the process
+  group. Remaining messages are drained from the mailbox.
+
+#### Output handling
+
+- **Merged stdout/stderr.** Via `:stderr_to_stdout` on the Port.
+  Models rarely need to distinguish the two streams.
+- **Tail-biased truncation.** When output exceeds `:max_output`, the
+  beginning is discarded and the tail is kept — the most recent
+  output is the most diagnostic for shell commands (build errors,
+  test failures, command results).
+- **Line-snapped.** After taking the last N bytes, the truncation
+  point snaps forward to the next newline to avoid a partial first
+  line. A notice is prepended:
+  `...(truncated, showing last 48.8KB of 1.2MB)`.
+- **Empty output.** When a command succeeds with no output, the tool
+  returns `"(no output)"` so the model gets a clear signal.
+
+#### Safety boundary
+
+The tool executes arbitrary shell commands with full system access.
+It is not a security boundary — there is no command allowlist,
+denylist, or argument sanitization. OS-level sandboxing (containers,
+restricted users, chroot) is the caller's responsibility. This is
+documented in the Runner moduledoc and in the tool description shown
+to the model.
+
+#### Known boundaries
+
+- No persistent state between invocations — env vars, shell
+  variables, working directory changes are not carried over.
+- `Port.close/1` sends SIGHUP, not SIGKILL. A process that traps
+  signals or has detached children may survive.
+- `binary_part` truncation can split multi-byte UTF-8 codepoints at
+  the cut point (same caveat as Sandbox).
+- Command prefix is string concatenation with a newline separator,
+  not shell-level escaping.
 
 ### 3.4 `Omni.Tools.WebFetch`
 

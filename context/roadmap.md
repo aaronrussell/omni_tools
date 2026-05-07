@@ -25,10 +25,9 @@ work first.
   supporting both module-based and inline extensions. See
   `context/design.md § 3.2`.
 
-- **`Omni.Tools.Bash`** — design pass, then implementation. Open
-  questions captured in `context/design.md § 3.3`: configuration
-  surface, single-tool vs. family, streaming output, safety boundary
-  story. Worth a short written design before code.
+- ~~**`Omni.Tools.Bash`**~~ — **done.** Port-based shell execution
+  with bash-first resolution, tail-biased output truncation, and
+  configurable timeout/env/prefix. See `context/design.md § 3.3`.
 
 - **`Omni.Tools.WebFetch`** — design pass, then implementation. Open
   questions in `context/design.md § 3.4`: Markdown converter choice,
