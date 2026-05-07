@@ -18,14 +18,12 @@ Two are ports of working code from another project; two need design
 work first.
 
 - ~~**`Omni.Tools.FileSystem`**~~ — **done.** Ported, reviewed, and
-  tested. See `context/design.md § 3.1` for the implemented contract
-  and `context/file_system_plan.md` for the original plan.
+  tested. See `context/design.md § 3.1` for the implemented contract.
 
-- **`Omni.Tools.Repl`** — port the existing implementation. Now
-  unblocked. Same review/tweak pass as FileSystem, with extra
-  attention to the extension mechanism (it's the most novel surface)
-  and to the documented safety boundary (the REPL is best-effort
-  sandboxing, not a security primitive).
+- ~~**`Omni.Tools.Repl`**~~ — **done.** Ported, reviewed, and tested.
+  Extension mechanism reworked: `Extension` is now a struct + behaviour
+  supporting both module-based and inline extensions. See
+  `context/design.md § 3.2`.
 
 - **`Omni.Tools.Bash`** — design pass, then implementation. Open
   questions captured in `context/design.md § 3.3`: configuration

@@ -148,9 +148,11 @@ clean, maintainable reference — not an open-ended toolbox.
   `Omni.Schema.Adapter` — don't reimplement.
 - **Run the affected test file before claiming done.** No network
   required for any test.
-- **Keep configuration explicit.** Tools never read application
-  config; everything is passed at `new/1`. The tool's caller (an
-  app, an agent) owns wiring.
+- **Keep configuration explicit.** Explicit opts to `new/1` always
+  take precedence. Application config may provide fallback defaults
+  for operational parameters (timeouts, limits) but is never
+  required — tools must work with zero app config and sensible
+  defaults.
 
 ### Don't
 

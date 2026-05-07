@@ -124,26 +124,97 @@ raises on errors so the model sees tool errors.
 
 ### 3.2 `Omni.Tools.Repl`
 
-Evaluates Elixir code in a sandboxed REPL. Existing implementation in
-another project — work here is **port, review, tweak**.
+Evaluates Elixir code in an isolated peer node. Ported from
+`omni_ui`, reworked extension mechanism.
 
-Intent:
+#### Module layout
 
-- Each tool use evaluates a snippet of Elixir, streaming back stdout
-  and the result.
-- **Pluggable extensions** that inject modules into the REPL runtime
-  before evaluation. Extensions are how callers expose capabilities to
-  the REPL — for example, a `FileSystem` extension that gives the REPL
-  access to a preconfigured directory, or app-specific helpers.
-- The "sandbox" is best-effort, not a security boundary (consistent
-  with the package's stance on sandboxing). The REPL is for trusted-
-  enough use cases — agent-driven experimentation, scratchpad
-  computation — not adversarial input. This must be documented
-  prominently.
+```
+lib/omni/tools/repl.ex                  # Omni.Tool implementation (thin)
+lib/omni/tools/repl/sandbox.ex          # Peer node execution engine
+lib/omni/tools/repl/extension.ex        # Extension behaviour + struct
+```
 
-The extension shape, the evaluation contract (timeouts, output
-capture, return-value rendering), and how state persists across calls
-are all decisions to revisit during the port.
+**`Omni.Tools.Repl`** — the tool module. `use Omni.Tool`, `init/1`,
+`schema/0`, `description/1`, `call/2`. Thin; delegates execution to
+`Sandbox` and reads resolved extensions from its state.
+
+**`Omni.Tools.Repl.Sandbox`** — the execution engine. Starts a fresh
+Erlang peer node per invocation, evaluates code with IO capture,
+returns output + raw result. Independently usable without the tool
+machinery. Handles timeouts, peer crashes, and output truncation.
+
+**`Omni.Tools.Repl.Extension`** — both a struct and a behaviour.
+Module-based extensions implement the behaviour (both `code/1` and
+`description/1` required). Inline extensions use the struct via
+`Extension.new/1` with at least one of `:code` or `:description`.
+
+#### Configuration
+
+| Option        | Default  | Effect                                               |
+| ------------- | -------- | ---------------------------------------------------- |
+| `:timeout`    | `60_000` | Execution timeout in milliseconds                    |
+| `:max_output` | `50_000` | Output truncation limit in bytes                     |
+| `:extensions` | `[]`     | List of extensions (module tuples or `%Extension{}`)  |
+
+Timeout and max_output support application config fallback via
+`Application.get_env(:omni_tools, Omni.Tools.Repl)`. Explicit opts
+always take precedence; app config is never required.
+
+#### Extension mechanism
+
+Extensions are resolved to `%Extension{}` structs at init time (when
+`Tool.new/1` is called). Three input forms are accepted:
+
+- `{module, opts}` — calls `module.code(opts)` and
+  `module.description(opts)`, stores results in struct
+- bare `module` — treated as `{module, []}`
+- `%Extension{}` — passed through as-is
+
+This means extension code and descriptions are captured once at
+construction time, not re-evaluated on each tool use.
+
+#### Sandbox contract
+
+- **Fresh peer per invocation.** No state carries over between calls.
+  Each `run/2` starts a new `:peer` node and stops it afterward.
+- **IO capture.** A host-side `StringIO` captures all peer output.
+  On timeout, partial output is still readable since the StringIO
+  lives on the host.
+- **Setup code.** Extensions inject code (string or AST) that runs in
+  the peer before the user's code and before IO capture begins.
+  Setup output is not included in the result.
+- **Host code paths.** The peer inherits all host code paths via
+  `:code.add_pathsa/1`, so application dependencies are available.
+  `Mix.install/1` can add extra packages in dev (each peer is fresh).
+- **Distribution.** Peer nodes require the host VM to be distributed.
+  `Sandbox.ensure_distributed!/0` handles this lazily (idempotent).
+  Callers may invoke it at application boot to avoid the distribution
+  flip on first tool use.
+
+Return type:
+
+```
+{:ok, %{output: String.t(), result: term()}}
+{:error, :timeout | :noconnection, %{output: String.t()}}
+{:error, {kind, reason, stacktrace}, %{output: String.t()}}
+```
+
+#### Safety boundary
+
+The sandbox executes arbitrary code with full system access. It is
+best-effort isolation, not a security boundary. For trusted use cases
+only: agent-driven experimentation, scratchpad computation — not
+adversarial input. This is documented in the Sandbox moduledoc and
+in the tool description shown to the model.
+
+#### Known boundaries
+
+- Full system access in the peer — file system, network, etc.
+- `binary_part` truncation can split multi-byte UTF-8 codepoints.
+- No persistent REPL state — each invocation is independent.
+- `ensure_distributed!` has a race window under concurrent first
+  calls; handled by accepting `{:error, {:already_started, _}}`.
 
 ### 3.3 `Omni.Tools.Bash`
 
