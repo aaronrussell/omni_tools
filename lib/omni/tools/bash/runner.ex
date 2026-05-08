@@ -40,6 +40,7 @@ defmodule Omni.Tools.Bash.Runner do
   @default_timeout 30_000
   @default_max_output 50_000
 
+  @typedoc "Result of a command execution — success, non-zero exit, or timeout."
   @type result ::
           {:ok, %{output: String.t(), exit_code: 0}}
           | {:error, :nonzero, %{output: String.t(), exit_code: pos_integer()}}

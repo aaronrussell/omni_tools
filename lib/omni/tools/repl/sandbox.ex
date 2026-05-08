@@ -36,6 +36,7 @@ defmodule Omni.Tools.Repl.Sandbox do
   @default_timeout 60_000
   @default_max_output 50_000
 
+  @typedoc "Result of a sandbox evaluation — success, timeout/disconnect, or exception."
   @type result ::
           {:ok, %{output: String.t(), result: term()}}
           | {:error, :timeout | :noconnection, %{output: String.t()}}
