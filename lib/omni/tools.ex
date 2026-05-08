@@ -1,5 +1,7 @@
 defmodule Omni.Tools do
   @moduledoc """
+  ![License](https://img.shields.io/github/license/aaronrussell/omni_tools?color=informational)
+
   **Ready-to-use tools for Omni-powered agents** — filesystem, shell, REPL,
   and web fetch. Built on [Omni](https://github.com/aaronrussell/omni).
 

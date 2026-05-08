@@ -1,5 +1,9 @@
 # Omni Tools
 
+![Hex.pm](https://img.shields.io/hexpm/v/omni_tools?color=informational)
+![License](https://img.shields.io/github/license/aaronrussell/omni_tools?color=informational)
+![Build Status](https://img.shields.io/github/actions/workflow/status/aaronrussell/omni_tools/elixir.yml?branch=main)
+
 **Ready-to-use tools for Omni-powered agents** — filesystem, shell, REPL, and web fetch. Built on [Omni](https://github.com/aaronrussell/omni).
 
 ## Features
