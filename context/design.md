@@ -83,14 +83,13 @@ patch, and list operations. Fields: `id`, `filename`, `media_type`,
 
 #### Configuration
 
-Two orthogonal booleans on `FS.new/1` (passed through from
-`Tool.new/1` → `init/1`):
-
 | Option       | Default | Effect                                                     |
 | ------------ | ------- | ---------------------------------------------------------- |
 | `:base_dir`  | (req'd) | Absolute path. Must already exist.                         |
 | `:read_only` | `false` | When `true`, only `read` and `list` are available.         |
 | `:nested`    | `true`  | When `false` (flat), paths cannot contain path separators. |
+
+All options support application config (see § 4).
 
 #### Path policy
 
@@ -157,9 +156,7 @@ Module-based extensions implement the behaviour (both `code/1` and
 | `:max_output` | `50_000` | Output truncation limit in bytes                     |
 | `:extensions` | `[]`     | List of extensions (module tuples or `%Extension{}`)  |
 
-Timeout and max_output support application config fallback via
-`Application.get_env(:omni_tools, Omni.Tools.Repl)`. Explicit opts
-always take precedence; app config is never required.
+All options support application config (see § 4).
 
 #### Extension mechanism
 
@@ -246,9 +243,7 @@ usable without the tool machinery.
 | `:shell`          | auto-resolved   | `{executable, args}` tuple. Auto: `/bin/bash` then `/bin/sh`.   |
 | `:command_prefix` | `nil`           | String prepended to every command with a newline separator.      |
 
-Timeout and max_output support application config fallback via
-`Application.get_env(:omni_tools, Omni.Tools.Bash)`. Explicit opts
-always take precedence; app config is never required.
+All options support application config (see § 4).
 
 #### Shell resolution
 
@@ -366,9 +361,7 @@ comments as readable Markdown.
 | `:max_urls`   | `10`         | Maximum URLs per batch call.                            |
 | `:timeout`    | `15_000`     | HTTP receive timeout (ms). Merged onto Req.             |
 
-Timeout and max_output support application config fallback via
-`Application.get_env(:omni_tools, Omni.Tools.WebFetch)`. Explicit opts
-always take precedence; app config is never required.
+All options support application config (see § 4).
 
 #### Strategy behaviour
 
@@ -445,10 +438,30 @@ Snaps back to the last newline before the cut point. Appends:
 
 ## 4. Cross-cutting decisions
 
-To be filled in as decisions accumulate. Topics likely to land here:
-configuration patterns shared across tools, error shape conventions,
-description-writing guidelines, how tools document their safety
-boundaries, testing patterns for tools with side effects.
+### Application configuration
+
+Every tool supports the same three-layer configuration merge in
+`init/1`:
+
+```
+module defaults → app config → explicit opts
+```
+
+Any option can be set at any layer. Explicit opts to `new/1` always
+win. Application config is keyed under `:omni_tools` by tool module
+name:
+
+```elixir
+# config/runtime.exs
+config :omni_tools, Omni.Tools.Bash, timeout: 60_000, env: [{"MIX_ENV", "prod"}]
+config :omni_tools, Omni.Tools.Repl, max_output: 100_000
+config :omni_tools, Omni.Tools.WebFetch, timeout: 30_000
+config :omni_tools, Omni.Tools.FileSystem, read_only: true
+```
+
+App config is never required — tools must work with zero app config
+and sensible module-level defaults. Required options with no default
+(`:dir`, `:base_dir`) still raise if missing after the merge.
 
 ---
 

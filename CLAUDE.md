@@ -149,10 +149,10 @@ clean, maintainable reference — not an open-ended toolbox.
 - **Run the affected test file before claiming done.** No network
   required for any test.
 - **Keep configuration explicit.** Explicit opts to `new/1` always
-  take precedence. Application config may provide fallback defaults
-  for operational parameters (timeouts, limits) but is never
-  required — tools must work with zero app config and sensible
-  defaults.
+  take precedence. Application config may provide defaults for any
+  option, but is never required — tools must work with zero app
+  config and sensible defaults. The merge order is:
+  module defaults → app config → explicit opts.
 
 ### Don't
 

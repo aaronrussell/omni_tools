@@ -28,12 +28,19 @@ defmodule Omni.Tools.Bash do
 
   alias Omni.Tools.Bash.Runner
 
-  @default_timeout 30_000
-  @default_max_output 50_000
+  @defaults [
+    env: [],
+    timeout: 30_000,
+    max_output: 50_000,
+    command_prefix: nil
+  ]
 
   @impl Omni.Tool
   def init(opts) do
-    opts = opts || []
+    opts =
+      @defaults
+      |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
+      |> Keyword.merge(opts || [])
 
     dir = Keyword.get(opts, :dir) || raise ArgumentError, "missing required :dir option"
 
@@ -45,15 +52,13 @@ defmodule Omni.Tools.Bash do
       raise ArgumentError, ":dir must be an absolute path, got: #{inspect(dir)}"
     end
 
-    shell = Runner.resolve_shell(opts)
-
     [
       dir: Path.expand(dir),
-      shell: shell,
-      env: validate_env!(Keyword.get(opts, :env, [])),
-      timeout: config(opts, :timeout, @default_timeout),
-      max_output: config(opts, :max_output, @default_max_output),
-      command_prefix: Keyword.get(opts, :command_prefix)
+      shell: Runner.resolve_shell(opts),
+      env: validate_env!(Keyword.fetch!(opts, :env)),
+      timeout: Keyword.fetch!(opts, :timeout),
+      max_output: Keyword.fetch!(opts, :max_output),
+      command_prefix: Keyword.fetch!(opts, :command_prefix)
     ]
   end
 
@@ -113,13 +118,6 @@ defmodule Omni.Tools.Bash do
       {:error, :timeout, %{output: output}} ->
         raise format_error(output, "Command timed out")
     end
-  end
-
-  defp config(opts, key, default) do
-    Keyword.get_lazy(opts, key, fn ->
-      Application.get_env(:omni_tools, Omni.Tools.Bash, [])
-      |> Keyword.get(key, default)
-    end)
   end
 
   defp format_error("", message), do: message

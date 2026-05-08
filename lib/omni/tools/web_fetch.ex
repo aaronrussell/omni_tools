@@ -53,13 +53,19 @@ defmodule Omni.Tools.WebFetch do
   alias Omni.Tools.WebFetch.{Fetcher, Strategy}
   alias Omni.Tools.WebFetch.Strategy.{Default, GitHub, Reddit}
 
-  @default_max_output 100_000
-  @default_max_urls 10
-  @default_timeout 15_000
+  @defaults [
+    strategies: [],
+    max_output: 100_000,
+    max_urls: 10,
+    timeout: 15_000
+  ]
 
   @impl Omni.Tool
   def init(opts) do
-    opts = opts || []
+    opts =
+      @defaults
+      |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
+      |> Keyword.merge(opts || [])
 
     req = Keyword.get(opts, :req, Req.new())
 
@@ -69,16 +75,16 @@ defmodule Omni.Tools.WebFetch do
 
     strategies =
       opts
-      |> Keyword.get(:strategies, [])
+      |> Keyword.fetch!(:strategies)
       |> Strategy.resolve()
       |> Kernel.++([{GitHub, []}, {Reddit, []}, {Default, []}])
 
     [
       req: req,
       strategies: strategies,
-      max_output: config(opts, :max_output, @default_max_output),
-      max_urls: config(opts, :max_urls, @default_max_urls),
-      timeout: config(opts, :timeout, @default_timeout)
+      max_output: Keyword.fetch!(opts, :max_output),
+      max_urls: Keyword.fetch!(opts, :max_urls),
+      timeout: Keyword.fetch!(opts, :timeout)
     ]
   end
 
@@ -171,12 +177,5 @@ defmodule Omni.Tools.WebFetch do
     end
 
     urls
-  end
-
-  defp config(opts, key, default) do
-    Keyword.get_lazy(opts, key, fn ->
-      Application.get_env(:omni_tools, Omni.Tools.WebFetch, [])
-      |> Keyword.get(key, default)
-    end)
   end
 end

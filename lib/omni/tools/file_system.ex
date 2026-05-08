@@ -26,8 +26,18 @@ defmodule Omni.Tools.FileSystem do
 
   alias Omni.Tools.FileSystem.FS
 
+  @defaults [
+    read_only: false,
+    nested: true
+  ]
+
   @impl Omni.Tool
-  def init(opts), do: FS.new(opts)
+  def init(opts) do
+    @defaults
+    |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
+    |> Keyword.merge(opts || [])
+    |> FS.new()
+  end
 
   @impl Omni.Tool
   def schema(%FS{read_only?: true}) do

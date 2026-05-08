@@ -107,7 +107,8 @@ defmodule Omni.Tools.WebFetch.Fetcher do
     base_req = Keyword.fetch!(state, :req)
     timeout = Keyword.fetch!(state, :timeout)
 
-    req = Req.merge(base_req, url: url, receive_timeout: timeout, decode_body: false, retry: false)
+    req =
+      Req.merge(base_req, url: url, receive_timeout: timeout, decode_body: false, retry: false)
 
     if function_exported?(mod, :request, 2) do
       mod.request(req, opts)

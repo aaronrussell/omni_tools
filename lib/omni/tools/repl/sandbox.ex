@@ -47,8 +47,8 @@ defmodule Omni.Tools.Repl.Sandbox do
   """
   @spec run(String.t(), keyword()) :: result()
   def run(code, opts \\ []) do
-    timeout = config(opts, :timeout, @default_timeout)
-    max_output = config(opts, :max_output, @default_max_output)
+    timeout = Keyword.get(opts, :timeout, @default_timeout)
+    max_output = Keyword.get(opts, :max_output, @default_max_output)
     setup = Keyword.get(opts, :setup)
 
     ensure_distributed!()
@@ -161,13 +161,6 @@ defmodule Omni.Tools.Repl.Sandbox do
     :peer.stop(pid)
   catch
     :exit, _ -> :ok
-  end
-
-  defp config(opts, key, default) do
-    Keyword.get_lazy(opts, key, fn ->
-      Application.get_env(:omni_tools, Omni.Tools.Repl, [])
-      |> Keyword.get(key, default)
-    end)
   end
 
   defp truncate_result({:ok, %{output: output, result: result}}, max) do

@@ -36,6 +36,12 @@ defmodule Omni.Tools.Repl do
 
   alias Omni.Tools.Repl.{Extension, Sandbox}
 
+  @defaults [
+    timeout: 60_000,
+    max_output: 50_000,
+    extensions: []
+  ]
+
   @impl Omni.Tool
   def schema do
     import Omni.Schema
@@ -55,11 +61,16 @@ defmodule Omni.Tools.Repl do
 
   @impl Omni.Tool
   def init(opts) do
-    opts = opts || []
+    opts =
+      @defaults
+      |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
+      |> Keyword.merge(opts || [])
 
-    opts
-    |> Keyword.take([:timeout, :max_output, :extensions])
-    |> Keyword.update(:extensions, [], &resolve_extensions/1)
+    [
+      timeout: Keyword.fetch!(opts, :timeout),
+      max_output: Keyword.fetch!(opts, :max_output),
+      extensions: opts |> Keyword.fetch!(:extensions) |> resolve_extensions()
+    ]
   end
 
   @impl Omni.Tool
