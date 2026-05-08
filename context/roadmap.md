@@ -29,12 +29,11 @@ work first.
   with bash-first resolution, tail-biased output truncation, and
   configurable timeout/env/prefix. See `context/design.md § 3.3`.
 
-- **`Omni.Tools.WebFetch`** — design pass, then implementation. Open
-  questions in `context/design.md § 3.4`: Markdown converter choice,
-  simplification aggressiveness, batch shape, limit semantics.
-
-No fixed ordering between Bash and WebFetch; the two ports come
-first because they unblock real usage.
+- ~~**`Omni.Tools.WebFetch`**~~ — **done.** Extensible strategy pattern
+  for site-specific extraction, `html2markdown` for HTML→Markdown,
+  GitHub raw-file and Reddit JSON built-in strategies, batch fetch via
+  `Task.async_stream`, head-biased truncation. See
+  `context/design.md § 3.4`.
 
 ---
 

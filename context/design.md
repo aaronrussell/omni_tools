@@ -316,30 +316,130 @@ to the model.
 
 ### 3.4 `Omni.Tools.WebFetch`
 
-Fetches content from URLs, simplifies it for LLM consumption. **No
-existing implementation — needs specing out.**
+Fetches content from URLs, simplifies it for LLM consumption.
 
-Intent:
+#### Module layout
 
-- **Single fetch** and **batch fetch** in one tool surface. Batch is
-  the common case — agents typically read several pages while
-  researching.
-- **Content simplification** for HTML — convert to Markdown,
-  strip boilerplate, drop scripts/styles. Other content types (JSON,
-  plain text, PDFs?) pass through with light handling.
-- **Configurable limits** to keep the agent's context bounded:
-  per-fetch byte cap, total batch cap, optional truncation strategy.
-- HTTP via Req (already a transitive dep through `omni`).
+```
+lib/omni/tools/web_fetch.ex                    # Omni.Tool implementation (thin)
+lib/omni/tools/web_fetch/fetcher.ex             # HTTP orchestration, batch, truncation
+lib/omni/tools/web_fetch/strategy.ex            # Strategy behaviour + resolution
+lib/omni/tools/web_fetch/strategy/default.ex    # Generic content handler
+lib/omni/tools/web_fetch/strategy/github.ex     # GitHub raw file redirect
+lib/omni/tools/web_fetch/strategy/reddit.ex     # Reddit JSON extraction
+```
 
-Open questions:
+**`Omni.Tools.WebFetch`** — the tool module. `use Omni.Tool`, `init/1`,
+`schema/1`, `description/1`, `call/2`. Thin; delegates to `Fetcher` for
+all real work.
 
-- Markdown converter choice — pure-Elixir options exist; pick the
-  most maintained one with the smallest dep tree.
-- Redirect / robots.txt / authentication policy — keep it minimal
-  for the reference tool; surface knobs only when concrete demand
-  surfaces.
-- How aggressively to simplify HTML, and whether to expose
-  configuration of the simplification (terse vs. faithful modes).
+**`Omni.Tools.WebFetch.Fetcher`** — HTTP orchestration engine. Builds
+Req requests, dispatches to strategies, handles batch via
+`Task.async_stream`, applies head-biased truncation. Independently
+usable without the tool machinery.
+
+**`Omni.Tools.WebFetch.Strategy`** — public module defining the strategy
+behaviour and providing `resolve/1` (normalizes strategy specs) and
+`find/2` (first-match dispatch). Strategies are the extensibility
+mechanism for site-specific content extraction.
+
+**`Omni.Tools.WebFetch.Strategy.Default`** — catch-all strategy.
+Content-type dispatch: HTML → Markdown (via `html2markdown`), JSON →
+pretty-printed, `text/*` → passthrough, everything else → metadata.
+
+**`Omni.Tools.WebFetch.Strategy.GitHub`** — matches `github.com` blob
+URLs. Rewrites to `raw.githubusercontent.com` so the LLM gets the raw
+file content instead of the GitHub HTML page. Non-blob GitHub URLs
+(issues, PRs, repo pages) fall through to the Default strategy.
+
+**`Omni.Tools.WebFetch.Strategy.Reddit`** — matches `*.reddit.com`.
+Rewrites URL to Reddit's JSON API (`.json` suffix), formats posts and
+comments as readable Markdown.
+
+#### Configuration
+
+| Option        | Default      | Effect                                                  |
+| ------------- | ------------ | ------------------------------------------------------- |
+| `:req`        | `Req.new()`  | Base `Req.Request` struct. Full transport control.      |
+| `:strategies` | `[]`         | User strategies prepended before Default catch-all.     |
+| `:max_output`   | `100_000`    | Head-biased truncation per URL (bytes). `:infinity` to disable. |
+| `:max_urls`   | `10`         | Maximum URLs per batch call.                            |
+| `:timeout`    | `15_000`     | HTTP receive timeout (ms). Merged onto Req.             |
+
+Timeout and max_output support application config fallback via
+`Application.get_env(:omni_tools, Omni.Tools.WebFetch)`. Explicit opts
+always take precedence; app config is never required.
+
+#### Strategy behaviour
+
+Strategies implement `Omni.Tools.WebFetch.Strategy`:
+
+- `match?(URI.t(), opts)` (required) — returns `true` if this strategy
+  handles the URL.
+- `request(Req.Request.t(), opts)` (optional) — modifies the request
+  before execution (URL rewriting, custom headers, adapter attachment).
+  Receives the fully-built `Req.Request` and returns a modified one.
+- `extract(Req.Response.t(), opts)` (required) — converts the response
+  to a content string.
+
+Strategy resolution follows the extension pattern: `{module, opts}` or
+bare `module` → `{module, []}`. Validated at init time via
+`Code.ensure_loaded/1` + `function_exported?/3`. User strategies are
+prepended; the built-in strategies (GitHub, Reddit, Default) are
+appended in that order, with Default as the catch-all.
+
+The `:req` option accepts a pre-configured `Req.Request` struct,
+enabling downstream apps to attach custom middleware (e.g. browser TLS
+impersonation via CloakedReq) without the tool needing to know about it.
+
+#### Fetch flow
+
+1. Parse URI → iterate strategies calling `match?/2` → first match wins.
+2. Build per-request Req: base `:req` struct + URL + timeout + strategy
+   `request/2` modification.
+3. Execute via `Req.request/1`. Decode is disabled (`decode_body: false`)
+   so strategies always receive raw binary bodies.
+4. On success (2xx): call `extract/2` → head-biased truncation.
+5. On HTTP error (4xx/5xx): return inline content (the tool executed
+   successfully — the server responded with an error status).
+6. On network error (Req returns `{:error, exception}`): raise. The
+   tool failed to execute — connection refused, DNS failure, timeout.
+
+Batch: `Task.async_stream` with `max_concurrency: 3`. HTTP errors are
+isolated per-URL (inline content). Network errors raise the whole batch
+(if one URL can't connect, the rest likely can't either). Single URL
+returns content directly; multiple URLs return sections separated by
+`## {url}` headers and `---` dividers.
+
+#### Truncation
+
+Head-biased (keeps the beginning — opposite of Bash's tail-biased).
+Snaps back to the last newline before the cut point. Appends:
+`...(truncated, showing first X of Y)`.
+
+#### Dependencies
+
+- `html2markdown` (~> 0.3) — pure Elixir HTML-to-Markdown converter.
+  Depends on Floki. Handles content extraction (strips nav, scripts,
+  styles, boilerplate) as part of conversion.
+- `plug` (~> 1.0, test only) — required for `Req.Test.stub` plug-based
+  HTTP stubbing in tests.
+
+#### Known boundaries
+
+- **No TLS fingerprint bypass.** Erlang/OTP's ssl module cannot
+  impersonate browser TLS fingerprints (JA3/JA4). Some Cloudflare-
+  protected sites will block requests. Downstream apps can work around
+  this by attaching CloakedReq (Rust NIF) to the `:req` option.
+- **No binary content extraction.** PDF, DOCX, images return metadata
+  only (content-type + size). No pure-Elixir PDF text extraction exists.
+- **No JavaScript rendering.** JS-heavy SPAs return the initial HTML
+  shell, not the rendered content.
+- **Encoding.** Charset conversion is best-effort: invalid UTF-8 bytes
+  are dropped via `:unicode.characters_to_binary/2`. No `<meta charset>`
+  parsing.
+- **`binary_part` truncation** can split multi-byte UTF-8 codepoints at
+  the cut point (same caveat as Bash/Repl).
 
 ---
 

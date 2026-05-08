@@ -170,6 +170,7 @@ defmodule Omni.Tools.Bash.Runner do
 
   # ── Output truncation ───────────────────────────────────────────
 
+  defp truncate_tail(output, :infinity), do: output
   defp truncate_tail(output, max) when byte_size(output) <= max, do: output
 
   defp truncate_tail(output, max) do

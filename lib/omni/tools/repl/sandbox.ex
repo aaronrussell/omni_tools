@@ -178,6 +178,7 @@ defmodule Omni.Tools.Repl.Sandbox do
     {:error, reason, %{output: maybe_truncate(output, max)}}
   end
 
+  defp maybe_truncate(string, :infinity), do: string
   defp maybe_truncate(string, max) when byte_size(string) <= max, do: string
 
   defp maybe_truncate(string, max) do

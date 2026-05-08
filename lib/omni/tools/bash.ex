@@ -13,15 +13,15 @@ defmodule Omni.Tools.Bash do
 
   ## Options
 
-    * `:dir` (required) — working directory. Must exist at init time.
-    * `:env` — extra environment variables as `[{String.t(), String.t()}]`.
-      Merged additively with the inherited environment. Default `[]`.
-    * `:timeout` — execution timeout in milliseconds. Default `30_000`.
-    * `:max_output` — output truncation limit in bytes. Tail-biased,
-      snapped to line boundaries. Default `50_000`.
-    * `:shell` — explicit shell as `{executable, args}` tuple.
-      Default: auto-resolved (bash then sh fallback).
-    * `:command_prefix` — string prepended to every command. Default `nil`.
+  - `:dir` (required) — working directory. Must exist at init time.
+  - `:env` — extra environment variables as `[{String.t(), String.t()}]`.
+    Merged additively with the inherited environment. Default `[]`.
+  - `:timeout` — execution timeout in milliseconds. Default `30_000`.
+  - `:max_output` — output truncation limit in bytes. Tail-biased, snapped to
+    line boundaries. Default `50_000`.
+  - `:shell` — explicit shell as `{executable, args}` tuple.
+    Default: auto-resolved (bash then sh fallback).
+  - `:command_prefix` — string prepended to every command. Default `nil`.
   """
 
   use Omni.Tool, name: "bash"

@@ -33,9 +33,11 @@ defmodule Omni.Tools.MixProject do
     [
       {:omni, github: "aaronrussell/omni"},
       {:mime, "~> 2.0"},
+      {:html2markdown, "~> 0.3"},
 
-      # dev dependencies
-      {:ex_doc, "~> 0.40.1", only: :dev, runtime: false, warn_if_outdated: true}
+      # dev/test dependencies
+      {:ex_doc, "~> 0.40.1", only: :dev, runtime: false, warn_if_outdated: true},
+      {:plug, "~> 1.0", only: :test}
     ]
   end
 
