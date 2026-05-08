@@ -99,7 +99,7 @@ defmodule Omni.Tools.Repl.Sandbox do
       ensure_epmd!()
       name = :"omni_repl_#{System.unique_integer([:positive])}"
 
-      case Node.start(name, name_domain: :shortnames) do
+      case Node.start(name, :shortnames) do
         {:ok, _} -> :ok
         {:error, {:already_started, _}} -> :ok
       end
