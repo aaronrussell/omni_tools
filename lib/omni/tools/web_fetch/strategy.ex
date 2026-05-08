@@ -4,16 +4,16 @@ defmodule Omni.Tools.WebFetch.Strategy do
 
   A strategy controls how a URL is fetched and how the response is
   converted to text for LLM consumption. Strategies are matched against
-  URLs in order — the first strategy whose `match?/2` returns `true`
+  URLs in order — the first strategy whose `c:match?/2` returns `true`
   handles the request.
 
   ## Callbacks
 
-    * `match?/2` (required) — returns `true` if this strategy handles
+    * `c:match?/2` (required) — returns `true` if this strategy handles
       the given URI.
-    * `request/2` (optional) — modifies the `Req.Request` before
+    * `c:request/2` (optional) — modifies the `Req.Request` before
       execution (URL rewriting, custom headers, etc.).
-    * `extract/2` (required) — converts the `Req.Response` into a
+    * `c:extract/2` (required) — converts the `Req.Response` into a
       content string.
 
   ## Example

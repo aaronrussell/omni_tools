@@ -60,7 +60,8 @@ defmodule Omni.Tools.MixProject do
 
   defp pkg do
     [
-      description: "Ready-to-use tools for Omni-powered agents — filesystem, shell, REPL, and web fetch.",
+      description:
+        "Ready-to-use tools for Omni-powered agents — filesystem, shell, REPL, and web fetch.",
       licenses: ["Apache-2.0"],
       maintainers: ["Aaron Russell"],
       files: ~w(lib .formatter.exs mix.exs CHANGELOG.md LICENSE README.md),
