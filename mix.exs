@@ -48,13 +48,19 @@ defmodule Omni.Tools.MixProject do
       source_ref: "v#{@version}",
       homepage_url: @source_url,
       extras: ["CHANGELOG.md"],
-      skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
+      skip_undefined_reference_warnings_on: ["CHANGELOG.md"],
+      groups_for_modules: [
+        FileSystem: ~r/^Omni\.Tools\.FileSystem/,
+        Bash: ~r/^Omni\.Tools\.Bash/,
+        Repl: ~r/^Omni\.Tools\.Repl/,
+        WebFetch: ~r/^Omni\.Tools\.WebFetch/
+      ]
     ]
   end
 
   defp pkg do
     [
-      description: "TODO",
+      description: "Ready-to-use tools for Omni-powered agents — filesystem, shell, REPL, and web fetch.",
       licenses: ["Apache-2.0"],
       maintainers: ["Aaron Russell"],
       files: ~w(lib .formatter.exs mix.exs CHANGELOG.md LICENSE README.md),

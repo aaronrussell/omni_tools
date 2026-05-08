@@ -13,20 +13,24 @@ defmodule Omni.Tools.WebFetch do
 
   Content extraction is handled by pluggable strategies. Each strategy
   implements `Omni.Tools.WebFetch.Strategy` and declares which URLs it
-  handles via `match?/2`. The first matching strategy wins.
+  handles via `match?/2`. Strategies are tried in order — the first
+  match wins.
 
-  Three strategies ship built-in:
+  Three strategies are always active, appended after any user-provided
+  strategies:
 
   - **GitHub** — matches `github.com` blob URLs, redirects to
     `raw.githubusercontent.com` for direct file content.
-  - **Reddit** — matches `*.reddit.com`, fetches via Reddit's JSON API, formats
-    posts and comments as readable Markdown.
+  - **Reddit** — matches `*.reddit.com`, fetches via Reddit's JSON API,
+    formats posts and comments as readable Markdown.
   - **Default** — catch-all that handles HTML (→ Markdown), JSON
     (→ pretty-printed), plain text (→ passthrough), and binary (→ metadata).
 
-  Custom strategies are prepended before the defaults:
+  Custom strategies are prepended, so they take priority over the
+  built-ins. To override the built-in GitHub handling, for example,
+  provide your own strategy that matches `github.com` first:
 
-      tool = Omni.Tools.WebFetch.new(strategies: [{MyApp.GitHubStrategy, token: "..."}])
+      tool = Omni.Tools.WebFetch.new(strategies: [{MyApp.WikiStrategy, []}])
 
   ## Custom Req
 
