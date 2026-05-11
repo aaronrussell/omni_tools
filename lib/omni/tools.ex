@@ -14,7 +14,7 @@ defmodule Omni.Tools do
 
   Add Omni Tools to your dependencies:
 
-      {:omni_tools, "~> 0.1"}
+      {:omni_tools, "~> 0.2"}
 
   Omni Tools depends on `omni`, which provides the LLM API layer. Configure
   your provider API keys as described in the

@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/github/license/aaronrussell/omni_tools?color=informational)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/aaronrussell/omni_tools/elixir.yml?branch=main)
 
-**Ready-to-use tools for Omni-powered agents** — filesystem, shell, REPL, and web fetch. Built on [Omni](https://github.com/aaronrussell/omni).
+**Ready-to-use tools for Omni-powered agents** — files, shell, REPL, and web fetch. Built on [Omni](https://github.com/aaronrussell/omni).
 
 ## Features
 
@@ -22,7 +22,7 @@ Add Omni Tools to your dependencies:
 ```elixir
 def deps do
   [
-    {:omni_tools, "~> 0.1"}
+    {:omni_tools, "~> 0.2"}
   ]
 end
 ```
