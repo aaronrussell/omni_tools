@@ -15,6 +15,13 @@ defmodule Omni.Tools.FileSystem do
   The tool delegates all operations to `Omni.Tools.FileSystem.FS`, which
   can also be used independently of the tool machinery.
 
+  ## REPL integration
+
+  When using both FileSystem and REPL tools together, the
+  `Omni.Tools.Repl.Extensions.FileSystem` extension lets agent code in
+  the sandbox read and write files directly — without a separate tool
+  use round-trip. See that module's docs for setup.
+
   ## Options
 
   - `:base_dir` (required) — absolute path to an existing directory.
