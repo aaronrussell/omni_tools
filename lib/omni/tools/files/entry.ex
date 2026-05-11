@@ -1,4 +1,4 @@
-defmodule Omni.Tools.FileSystem.Entry do
+defmodule Omni.Tools.Files.Entry do
   @moduledoc """
   Metadata for a file managed by the filesystem tool.
 

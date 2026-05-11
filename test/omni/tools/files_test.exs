@@ -1,18 +1,18 @@
-defmodule Omni.Tools.FileSystemTest do
+defmodule Omni.Tools.FilesTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.FileSystem
+  alias Omni.Tools.Files
 
   @moduletag :tmp_dir
 
   defp tool(ctx, opts \\ []) do
-    FileSystem.new(Keyword.merge([base_dir: ctx.tmp_dir], opts))
+    Files.new(Keyword.merge([base_dir: ctx.tmp_dir], opts))
   end
 
   describe "new/1" do
     test "returns an %Omni.Tool{} with the right name", ctx do
       tool = tool(ctx)
-      assert %Omni.Tool{name: "file_system"} = tool
+      assert %Omni.Tool{name: "files"} = tool
     end
   end
 

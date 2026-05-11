@@ -1,7 +1,7 @@
-defmodule Omni.Tools.FileSystem.EntryTest do
+defmodule Omni.Tools.Files.EntryTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.FileSystem.Entry
+  alias Omni.Tools.Files.Entry
 
   @moduletag :tmp_dir
 

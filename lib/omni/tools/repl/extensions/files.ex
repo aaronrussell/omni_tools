@@ -1,16 +1,16 @@
-defmodule Omni.Tools.Repl.Extensions.FileSystem do
+defmodule Omni.Tools.Repl.Extensions.Files do
   @moduledoc """
-  REPL extension that bridges `Omni.Tools.FileSystem` into the sandbox.
+  REPL extension that bridges `Omni.Tools.Files` into the sandbox.
 
-  When an agent has both REPL and FileSystem tools, it can generate data
-  in the REPL and then write it via a separate FileSystem tool use. This
+  When an agent has both REPL and Files tools, it can generate data
+  in the REPL and then write it via a separate Files tool use. This
   extension removes that round-trip — code running in the sandbox can
   read and write files directly through a `Files` module that operates
   on the same configured filesystem scope.
 
-  The extension accepts a `%Omni.Tools.FileSystem.FS{}` struct, so the
+  The extension accepts a `%Omni.Tools.Files.FS{}` struct, so the
   sandbox inherits the same base directory, read-only flag, and nesting
-  policy as the FileSystem tool it's paired with.
+  policy as the Files tool it's paired with.
 
       Files.write("chart.html", html_content)   #=> %Entry{}
       Files.read("data.csv")                     #=> "csv,content..."
@@ -20,10 +20,10 @@ defmodule Omni.Tools.Repl.Extensions.FileSystem do
 
   ## Usage
 
-      fs = Omni.Tools.FileSystem.FS.new(base_dir: "/tmp/workspace")
+      fs = Omni.Tools.Files.FS.new(base_dir: "/tmp/workspace")
 
       Omni.Tools.Repl.new(
-        extensions: [{Omni.Tools.Repl.Extensions.FileSystem, fs: fs}]
+        extensions: [{Omni.Tools.Repl.Extensions.Files, fs: fs}]
       )
   """
 
@@ -40,33 +40,33 @@ defmodule Omni.Tools.Repl.Extensions.FileSystem do
         @fs unquote(escaped)
 
         def read(id) do
-          case Omni.Tools.FileSystem.FS.read(@fs, id) do
+          case Omni.Tools.Files.FS.read(@fs, id) do
             {:ok, content} -> content
             {:error, reason} -> raise format_error(reason, id)
           end
         end
 
         def write(id, content) do
-          case Omni.Tools.FileSystem.FS.write(@fs, id, content) do
+          case Omni.Tools.Files.FS.write(@fs, id, content) do
             {:ok, entry} -> entry
             {:error, reason} -> raise format_error(reason, id)
           end
         end
 
         def patch(id, search, replace) do
-          case Omni.Tools.FileSystem.FS.patch(@fs, id, search, replace) do
+          case Omni.Tools.Files.FS.patch(@fs, id, search, replace) do
             {:ok, entry} -> entry
             {:error, reason} -> raise format_error(reason, id)
           end
         end
 
         def list do
-          {:ok, entries} = Omni.Tools.FileSystem.FS.list(@fs)
+          {:ok, entries} = Omni.Tools.Files.FS.list(@fs)
           entries
         end
 
         def delete(id) do
-          case Omni.Tools.FileSystem.FS.delete(@fs, id) do
+          case Omni.Tools.Files.FS.delete(@fs, id) do
             :ok -> :ok
             {:error, reason} -> raise format_error(reason, id)
           end

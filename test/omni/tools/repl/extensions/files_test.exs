@@ -1,9 +1,9 @@
-defmodule Omni.Tools.Repl.Extensions.FileSystemTest do
+defmodule Omni.Tools.Repl.Extensions.FilesTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.FileSystem.FS
+  alias Omni.Tools.Files.FS
   alias Omni.Tools.Repl
-  alias Omni.Tools.Repl.Extensions.FileSystem, as: FSExtension
+  alias Omni.Tools.Repl.Extensions.Files, as: FSExtension
 
   @moduletag :tmp_dir
 

@@ -13,7 +13,7 @@ For the design intent and the state of the work, see
 worked example of how to build tools for LLMs. The four tools currently
 in scope:
 
-- `Omni.Tools.FileSystem` — CRUD over a configurable base directory,
+- `Omni.Tools.Files` — CRUD over a configurable base directory,
   with read-only / flat / nested scope modes.
 - `Omni.Tools.Repl` — evaluates Elixir code in a sandboxed REPL with
   pluggable extensions that inject modules into the runtime.
@@ -96,7 +96,7 @@ clean, maintainable reference — not an open-ended toolbox.
   them precise about what the tool does, what arguments it takes,
   and what it returns. Override `description/1` when configuration
   changes the behaviour the model needs to know about (e.g.
-  `FileSystem` exposing whether writes are allowed).
+  `Files` exposing whether writes are allowed).
 - Return strings or simple maps from `call`. The tool result content
   must serialize cleanly when round-tripped through a dialect.
 - On failure, raise. Omni's tool executor catches the exception and
@@ -109,7 +109,7 @@ clean, maintainable reference — not an open-ended toolbox.
 
 - **Tool use**, not "tool call" (aligns with `omni`).
 - A tool's **scope** or **base** refers to the configured boundary
-  it operates within (the `FileSystem` base dir, the `Bash` working
+  it operates within (the `Files` base dir, the `Bash` working
   directory, etc.).
 
 ### Public vs internal
@@ -119,7 +119,7 @@ clean, maintainable reference — not an open-ended toolbox.
   `@spec` on public functions.
 - Internal helpers (path resolution, content simplification,
   extension wiring) live in nested `@moduledoc false` modules under
-  the tool's namespace, e.g. `Omni.Tools.FileSystem.Path`.
+  the tool's namespace, e.g. `Omni.Tools.Files.Path`.
 - Doc tone: practical, concise, example-driven. Lead with what the
   tool does and how to wire it up. Rely on `@spec` for types — don't
   repeat type info in prose.

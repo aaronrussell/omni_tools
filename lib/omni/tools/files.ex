@@ -1,4 +1,4 @@
-defmodule Omni.Tools.FileSystem do
+defmodule Omni.Tools.Files do
   @moduledoc """
   An `Omni.Tool` for file operations scoped to a base directory.
 
@@ -7,18 +7,18 @@ defmodule Omni.Tools.FileSystem do
   allowed and whether subdirectories are supported.
 
       # Full read-write access with nested subdirectories
-      tool = Omni.Tools.FileSystem.new(base_dir: "/data/workspace")
+      tool = Omni.Tools.Files.new(base_dir: "/data/workspace")
 
       # Read-only access, flat (no subdirectories)
-      tool = Omni.Tools.FileSystem.new(base_dir: "/data/docs", read_only: true, nested: false)
+      tool = Omni.Tools.Files.new(base_dir: "/data/docs", read_only: true, nested: false)
 
-  The tool delegates all operations to `Omni.Tools.FileSystem.FS`, which
+  The tool delegates all operations to `Omni.Tools.Files.FS`, which
   can also be used independently of the tool machinery.
 
   ## REPL integration
 
-  When using both FileSystem and REPL tools together, the
-  `Omni.Tools.Repl.Extensions.FileSystem` extension lets agent code in
+  When using both Files and REPL tools together, the
+  `Omni.Tools.Repl.Extensions.Files` extension lets agent code in
   the sandbox read and write files directly — without a separate tool
   use round-trip. See that module's docs for setup.
 
@@ -29,9 +29,9 @@ defmodule Omni.Tools.FileSystem do
   - `:nested` — allows subdirectory paths in ids. Default `true`.
   """
 
-  use Omni.Tool, name: "file_system"
+  use Omni.Tool, name: "files"
 
-  alias Omni.Tools.FileSystem.FS
+  alias Omni.Tools.Files.FS
 
   @defaults [
     read_only: false,

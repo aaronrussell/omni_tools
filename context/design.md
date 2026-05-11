@@ -56,28 +56,28 @@ explicitly via `Tool.new/1`.
 Brief sketches of what's coming. Each will get a dedicated section
 fleshed out as it lands.
 
-### 3.1 `Omni.Tools.FileSystem`
+### 3.1 `Omni.Tools.Files`
 
 CRUD operations scoped to a configurable base directory.
 
 #### Module layout
 
 ```
-lib/omni/tools/file_system.ex          # Omni.Tool implementation (thin)
-lib/omni/tools/file_system/fs.ex       # %FS{} + path resolution + file ops
-lib/omni/tools/file_system/entry.ex    # %Entry{} result struct
+lib/omni/tools/files.ex          # Omni.Tool implementation (thin)
+lib/omni/tools/files/fs.ex       # %FS{} + path resolution + file ops
+lib/omni/tools/files/entry.ex    # %Entry{} result struct
 ```
 
-**`Omni.Tools.FileSystem`** — the tool module. `use Omni.Tool`,
+**`Omni.Tools.Files`** — the tool module. `use Omni.Tool`,
 `init/1`, `schema/1`, `description/1`, `call/2`. Thin; delegates to
 `FS` for all real work.
 
-**`Omni.Tools.FileSystem.FS`** — the public, reusable filesystem API.
+**`Omni.Tools.Files.FS`** — the public, reusable filesystem API.
 Carries the `%FS{}` struct (base dir, mode flags), path resolution,
 and all file operations (`read`, `write`, `list`, `patch`, `delete`).
 Independently usable without the tool machinery.
 
-**`Omni.Tools.FileSystem.Entry`** — result struct returned by write,
+**`Omni.Tools.Files.Entry`** — result struct returned by write,
 patch, and list operations. Fields: `id`, `filename`, `media_type`,
 `size`, `mtime`.
 
@@ -456,7 +456,7 @@ name:
 config :omni_tools, Omni.Tools.Bash, timeout: 60_000, env: [{"MIX_ENV", "prod"}]
 config :omni_tools, Omni.Tools.Repl, max_output: 100_000
 config :omni_tools, Omni.Tools.WebFetch, timeout: 30_000
-config :omni_tools, Omni.Tools.FileSystem, read_only: true
+config :omni_tools, Omni.Tools.Files, read_only: true
 ```
 
 App config is never required — tools must work with zero app config
@@ -471,8 +471,8 @@ To be filled in once the first tool is ported. Expected shape:
 
 ```
 lib/omni/tools/
-├── file_system.ex                # public tool module
-├── file_system/                  # @moduledoc false helpers
+├── files.ex                      # public tool module
+├── files/                        # @moduledoc false helpers
 ├── repl.ex
 ├── repl/
 ├── bash.ex

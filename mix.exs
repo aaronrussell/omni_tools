@@ -52,7 +52,7 @@ defmodule Omni.Tools.MixProject do
       extras: ["CHANGELOG.md"],
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"],
       groups_for_modules: [
-        FileSystem: ~r/^Omni\.Tools\.FileSystem/,
+        Files: ~r/^Omni\.Tools\.Files/,
         Bash: ~r/^Omni\.Tools\.Bash/,
         Repl: ~r/^Omni\.Tools\.Repl/,
         WebFetch: ~r/^Omni\.Tools\.WebFetch/

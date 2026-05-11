@@ -1,8 +1,8 @@
-defmodule Omni.Tools.FileSystem.FS do
+defmodule Omni.Tools.Files.FS do
   @moduledoc """
   Filesystem operations scoped to a base directory.
 
-  This module is the reusable core of `Omni.Tools.FileSystem` — it works
+  This module is the reusable core of `Omni.Tools.Files` — it works
   independently of the tool machinery. Construct an `%FS{}` with `new/1`,
   then call operations directly:
 
@@ -20,7 +20,7 @@ defmodule Omni.Tools.FileSystem.FS do
   a security boundary. OS-level sandboxing is the right tool for that.
   """
 
-  alias Omni.Tools.FileSystem.Entry
+  alias Omni.Tools.Files.Entry
 
   defstruct [:base_dir, read_only?: false, nested?: true]
 

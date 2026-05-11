@@ -24,7 +24,7 @@ defmodule Omni.Tools do
 
   | Module | What it does |
   | --- | --- |
-  | `Omni.Tools.FileSystem` | CRUD over a scoped directory with read-only and flat modes |
+  | `Omni.Tools.Files` | CRUD over a scoped directory with read-only and flat modes |
   | `Omni.Tools.Bash` | Executes shell commands with timeout and output capture |
   | `Omni.Tools.Repl` | Evaluates Elixir code in a sandboxed peer node |
   | `Omni.Tools.WebFetch` | Fetches URLs, simplifies content for LLM consumption |
@@ -32,25 +32,25 @@ defmodule Omni.Tools do
   Each tool is created with `new/1` and returns an `%Omni.Tool{}` struct
   ready to pass into an Omni context:
 
-      fs   = Omni.Tools.FileSystem.new(base_dir: "/data/workspace")
+      fs   = Omni.Tools.Files.new(base_dir: "/data/workspace")
       bash = Omni.Tools.Bash.new(dir: "/app")
       repl = Omni.Tools.Repl.new()
       web  = Omni.Tools.WebFetch.new()
 
-  ### FileSystem
+  ### Files
 
   Read, write, patch, list, and delete files within a scoped directory.
   Configuration controls read-only access and whether subdirectories are
   allowed:
 
       # Full access with nested paths
-      Omni.Tools.FileSystem.new(base_dir: "/data/workspace")
+      Omni.Tools.Files.new(base_dir: "/data/workspace")
 
       # Read-only, flat (no subdirectories)
-      Omni.Tools.FileSystem.new(base_dir: "/data/docs", read_only: true, nested: false)
+      Omni.Tools.Files.new(base_dir: "/data/docs", read_only: true, nested: false)
 
-  See `Omni.Tools.FileSystem` for all options. The underlying operations
-  are also available standalone via `Omni.Tools.FileSystem.FS`.
+  See `Omni.Tools.Files` for all options. The underlying operations
+  are also available standalone via `Omni.Tools.Files.FS`.
 
   ### Bash
 
@@ -102,7 +102,7 @@ defmodule Omni.Tools do
   Pass tools to `Omni.generate_text/3` or `Omni.stream_text/3` — the tool
   loop executes uses automatically and feeds results back to the model:
 
-      fs   = Omni.Tools.FileSystem.new(base_dir: "/data/workspace")
+      fs   = Omni.Tools.Files.new(base_dir: "/data/workspace")
       bash = Omni.Tools.Bash.new(dir: "/data/workspace")
 
       context = Omni.context(
