@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-11
+
+### Changed
+
+- **FileSystem → Files** — renamed `Omni.Tools.FileSystem` to `Omni.Tools.Files` (and all sub-modules). The tool provides scoped file CRUD, not full filesystem access — "Files" better reflects the bounded nature of the tool.
+
+### Added
+
+- **Files REPL extension** (`Omni.Tools.Repl.Extensions.Files`) — bridges the Files tool into the REPL sandbox, injecting a `Files` module so agent code can read and write files directly without a separate tool use round-trip.
+
 ## [0.1.0] - 2026-05-08
 
 Initial release — a small, opinionated set of reference tools for the
@@ -20,5 +30,6 @@ Initial release — a small, opinionated set of reference tools for the
 
 ---
 
-[Unreleased]: https://github.com/aaronrussell/omni_tools/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/aaronrussell/omni_tools/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/aaronrussell/omni_tools/releases/tag/v0.2.0
 [0.1.0]: https://github.com/aaronrussell/omni_tools/releases/tag/v0.1.0

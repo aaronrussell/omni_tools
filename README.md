@@ -8,7 +8,7 @@
 
 ## Features
 
-- **FileSystem** — scoped file CRUD with read-only and flat modes
+- **Files** — scoped file CRUD with read-only and flat modes
 - **Bash** — shell command execution with timeout, environment, and output capture
 - **Repl** — Elixir code evaluation in isolated peer nodes with pluggable extensions
 - **WebFetch** — URL fetching with HTML-to-Markdown, JSON pretty-printing, and pluggable strategies
@@ -35,23 +35,23 @@ README](https://github.com/aaronrussell/omni#setup).
 
 | Module | What it does |
 | --- | --- |
-| `Omni.Tools.FileSystem` | CRUD over a scoped directory with read-only and flat modes |
+| `Omni.Tools.Files` | CRUD over a scoped directory with read-only and flat modes |
 | `Omni.Tools.Bash` | Executes shell commands with timeout and output capture |
 | `Omni.Tools.Repl` | Evaluates Elixir code in a sandboxed peer node |
 | `Omni.Tools.WebFetch` | Fetches URLs, simplifies content for LLM consumption |
 
 Each tool is created with `new/1` and returns an `%Omni.Tool{}` struct:
 
-### FileSystem
+### Files
 
 Read, write, patch, list, and delete files within a scoped directory:
 
 ```elixir
 # Full access with nested paths
-Omni.Tools.FileSystem.new(base_dir: "/data/workspace")
+Omni.Tools.Files.new(base_dir: "/data/workspace")
 
 # Read-only, flat (no subdirectories)
-Omni.Tools.FileSystem.new(base_dir: "/data/docs", read_only: true, nested: false)
+Omni.Tools.Files.new(base_dir: "/data/docs", read_only: true, nested: false)
 ```
 
 ### Bash
@@ -100,7 +100,7 @@ Pass tools to `Omni.generate_text/3` or `Omni.stream_text/3` — the tool
 loop executes uses automatically and feeds results back to the model:
 
 ```elixir
-fs   = Omni.Tools.FileSystem.new(base_dir: "/data/workspace")
+fs   = Omni.Tools.Files.new(base_dir: "/data/workspace")
 bash = Omni.Tools.Bash.new(dir: "/data/workspace")
 
 context = Omni.context(
