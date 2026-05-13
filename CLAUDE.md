@@ -112,6 +112,20 @@ clean, maintainable reference — not an open-ended toolbox.
   it operates within (the `Files` base dir, the `Bash` working
   directory, etc.).
 
+### Naming filesystem paths
+
+This convention applies across all omni packages:
+
+- **`*_dir`** — a filesystem path expected to identify a directory
+  (e.g. `base_dir`, `tmp_dir`).
+- **`*_file`** — a filesystem path expected to identify a file.
+- **`*_path`** — a generic filesystem path (could be file or
+  directory) or a non-filesystem path concept such as a URL path.
+
+Applies to option names, struct fields, function names, types, and
+internal variables. Bare names like `dir` or `path` are fine where
+context makes the meaning obvious.
+
 ### Public vs internal
 
 - All tool modules under `Omni.Tools.*` are public; each must have a
