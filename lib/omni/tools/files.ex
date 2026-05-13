@@ -24,7 +24,12 @@ defmodule Omni.Tools.Files do
 
   ## Options
 
-  - `:base_dir` (required) — absolute path to the base directory (created on first write if it doesn't exist).
+  Either pass a pre-built `%FS{}` struct or the options to build one:
+
+  - `:fs` — a `%Omni.Tools.Files.FS{}` struct. When provided, `:base_dir`,
+    `:read_only`, and `:nested` are ignored.
+  - `:base_dir` (required if `:fs` is not given) — absolute path to the base
+    directory (created on first write if it doesn't exist).
   - `:read_only` — restricts to `read` and `list` only. Default `false`.
   - `:nested` — allows subdirectory paths in ids. Default `true`.
   """
@@ -40,10 +45,14 @@ defmodule Omni.Tools.Files do
 
   @impl Omni.Tool
   def init(opts) do
-    @defaults
-    |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
-    |> Keyword.merge(opts || [])
-    |> FS.new()
+    case Keyword.get(opts, :fs) do
+      %FS{} = fs -> fs
+      nil ->
+        @defaults
+        |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
+        |> Keyword.merge(opts || [])
+        |> FS.new()
+    end
   end
 
   @impl Omni.Tool

@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Changed
 
-- **Files** — `base_dir` no longer needs to exist at init time. The directory is created automatically on the first write.
+- **Files** / **Files extension** — both now accept either a pre-built `%FS{}` struct via the `:fs` option or raw options (`:base_dir`, `:read_only`, `:nested`), so callers using both can share a single FS.
+- **Files.FS** — `base_dir` no longer needs to exist at init time. The directory is created automatically on the first write.
 
 ## [0.2.0] - 2026-05-11
 

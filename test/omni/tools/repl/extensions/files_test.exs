@@ -20,10 +20,16 @@ defmodule Omni.Tools.Repl.Extensions.FilesTest do
   end
 
   describe "code/1" do
-    test "raises when :fs option is missing" do
-      assert_raise KeyError, ~r/:fs/, fn ->
+    test "raises when neither :fs nor :base_dir is given" do
+      assert_raise ArgumentError, ~r/:base_dir/, fn ->
         FSExtension.code([])
       end
+    end
+
+    test "accepts raw options instead of :fs", ctx do
+      tool = Repl.new(extensions: [{FSExtension, base_dir: ctx.tmp_dir}])
+      result = tool.handler.(%{title: "test", code: ~S|Files.list()|})
+      assert result =~ "[]"
     end
   end
 

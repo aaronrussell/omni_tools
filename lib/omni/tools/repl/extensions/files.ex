@@ -8,9 +8,9 @@ defmodule Omni.Tools.Repl.Extensions.Files do
   read and write files directly through a `Files` module that operates
   on the same configured filesystem scope.
 
-  The extension accepts a `%Omni.Tools.Files.FS{}` struct, so the
-  sandbox inherits the same base directory, read-only flag, and nesting
-  policy as the Files tool it's paired with.
+  The extension accepts a `%Omni.Tools.Files.FS{}` struct or the same
+  raw options as the Files tool, so the sandbox inherits the same base
+  directory, read-only flag, and nesting policy.
 
       Files.write("chart.html", html_content)   #=> %Entry{}
       Files.read("data.csv")                     #=> "csv,content..."
@@ -18,20 +18,39 @@ defmodule Omni.Tools.Repl.Extensions.Files do
       Files.list()                                #=> [%Entry{}, ...]
       Files.delete("temp.txt")                    #=> :ok
 
+  ## Options
+
+  Either pass a pre-built `%FS{}` or the options to build one:
+
+  - `:fs` — a `%Omni.Tools.Files.FS{}` struct. When provided, `:base_dir`,
+    `:read_only`, and `:nested` are ignored.
+  - `:base_dir` (required if `:fs` is not given) — absolute path to the base
+    directory.
+  - `:read_only` — restricts to read and list only. Default `false`.
+  - `:nested` — allows subdirectory paths. Default `true`.
+
   ## Usage
 
+      # With a pre-built FS (shared with the Files tool)
       fs = Omni.Tools.Files.FS.new(base_dir: "/tmp/workspace")
 
       Omni.Tools.Repl.new(
         extensions: [{Omni.Tools.Repl.Extensions.Files, fs: fs}]
       )
+
+      # With raw options
+      Omni.Tools.Repl.new(
+        extensions: [{Omni.Tools.Repl.Extensions.Files, base_dir: "/tmp/workspace"}]
+      )
   """
+
+  alias Omni.Tools.Files.FS
 
   @behaviour Omni.Tools.Repl.Extension
 
   @impl true
   def code(opts) do
-    fs = Keyword.fetch!(opts, :fs)
+    fs = resolve_fs(opts)
     escaped = Macro.escape(fs)
 
     quote do
@@ -90,7 +109,7 @@ defmodule Omni.Tools.Repl.Extensions.Files do
 
   @impl true
   def description(opts) do
-    fs = Keyword.fetch!(opts, :fs)
+    fs = resolve_fs(opts)
 
     intro =
       if fs.read_only? do
@@ -139,5 +158,12 @@ defmodule Omni.Tools.Repl.Extensions.Files do
 
     All functions raise on errors with descriptive messages.
     """
+  end
+
+  defp resolve_fs(opts) do
+    case Keyword.get(opts, :fs) do
+      %FS{} = fs -> fs
+      nil -> FS.new(opts)
+    end
   end
 end

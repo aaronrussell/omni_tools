@@ -85,11 +85,16 @@ patch, and list operations. Fields: `id`, `filename`, `media_type`,
 
 | Option       | Default | Effect                                                     |
 | ------------ | ------- | ---------------------------------------------------------- |
-| `:base_dir`  | (req'd) | Absolute path. Must already exist.                         |
+| `:fs`        | `nil`   | Pre-built `%FS{}` struct. When provided, other options are ignored. |
+| `:base_dir`  | (req'd if no `:fs`) | Absolute path. Created on first write if it doesn't exist. |
 | `:read_only` | `false` | When `true`, only `read` and `list` are available.         |
 | `:nested`    | `true`  | When `false` (flat), paths cannot contain path separators. |
 
-All options support application config (see § 4).
+The Files tool and the `Omni.Tools.Repl.Extensions.Files` extension
+accept the same options, so callers can pass a single `%FS{}` to both
+or build from raw options independently.
+
+All options (except `:fs`) support application config (see § 4).
 
 #### Path policy
 

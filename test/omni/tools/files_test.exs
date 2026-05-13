@@ -2,6 +2,7 @@ defmodule Omni.Tools.FilesTest do
   use ExUnit.Case, async: true
 
   alias Omni.Tools.Files
+  alias Omni.Tools.Files.FS
 
   @moduletag :tmp_dir
 
@@ -13,6 +14,14 @@ defmodule Omni.Tools.FilesTest do
     test "returns an %Omni.Tool{} with the right name", ctx do
       tool = tool(ctx)
       assert %Omni.Tool{name: "files"} = tool
+    end
+
+    test "accepts a pre-built :fs struct", ctx do
+      fs = FS.new(base_dir: ctx.tmp_dir, read_only: true)
+      tool = Files.new(fs: fs)
+      assert %Omni.Tool{name: "files"} = tool
+      commands = get_in(tool.input_schema, [:properties, :command, :enum])
+      assert commands == ["read", "list"]
     end
   end
 
