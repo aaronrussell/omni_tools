@@ -36,14 +36,15 @@ defmodule Omni.Tools.Files.FS do
 
   ## Options
 
-    * `:base_dir` (required) — absolute path to an existing directory.
+    * `:base_dir` (required) — absolute path to the base directory.
+      The directory does not need to exist yet — the first `write/3`
+      will create it.
     * `:read_only` — when `true`, write/patch/delete operations return
       `{:error, :read_only}`. Defaults to `false`.
     * `:nested` — when `true`, ids may contain path separators (subdirectories).
       When `false`, only bare filenames are accepted. Defaults to `true`.
 
-  Raises `ArgumentError` if `:base_dir` is missing, not absolute, or
-  does not exist on disk.
+  Raises `ArgumentError` if `:base_dir` is missing or not absolute.
   """
   @spec new(keyword()) :: t()
   def new(opts) do
@@ -51,10 +52,6 @@ defmodule Omni.Tools.Files.FS do
 
     unless Path.type(base_dir) == :absolute do
       raise ArgumentError, ":base_dir must be an absolute path, got: #{inspect(base_dir)}"
-    end
-
-    unless File.dir?(base_dir) do
-      raise ArgumentError, ":base_dir does not exist or is not a directory: #{inspect(base_dir)}"
     end
 
     %__MODULE__{
@@ -108,7 +105,7 @@ defmodule Omni.Tools.Files.FS do
 
   def write(%__MODULE__{} = fs, id, content) do
     with {:ok, abs_path} <- resolve(fs, id) do
-      if fs.nested?, do: File.mkdir_p!(Path.dirname(abs_path))
+      File.mkdir_p!(Path.dirname(abs_path))
       File.write!(abs_path, content)
       {:ok, Entry.new(id, abs_path)}
     end

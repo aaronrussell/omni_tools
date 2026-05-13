@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+### Changed
+
+- **Files** — `base_dir` no longer needs to exist at init time. The directory is created automatically on the first write.
+
 ## [0.2.0] - 2026-05-11
 
 ### Changed

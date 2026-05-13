@@ -24,7 +24,7 @@ defmodule Omni.Tools.Files do
 
   ## Options
 
-  - `:base_dir` (required) — absolute path to an existing directory.
+  - `:base_dir` (required) — absolute path to the base directory (created on first write if it doesn't exist).
   - `:read_only` — restricts to `read` and `list` only. Default `false`.
   - `:nested` — allows subdirectory paths in ids. Default `true`.
   """

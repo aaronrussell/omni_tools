@@ -34,10 +34,9 @@ defmodule Omni.Tools.Files.FSTest do
       end
     end
 
-    test "raises on non-existent :base_dir" do
-      assert_raise ArgumentError, ~r/does not exist/, fn ->
-        FS.new(base_dir: "/nonexistent/path/#{System.unique_integer()}")
-      end
+    test "accepts non-existent :base_dir", ctx do
+      non_existent = Path.join(ctx.tmp_dir, "not_yet")
+      assert %FS{base_dir: ^non_existent} = FS.new(base_dir: non_existent)
     end
   end
 
@@ -144,6 +143,15 @@ defmodule Omni.Tools.Files.FSTest do
     test "creates parent dirs in nested mode", ctx do
       assert {:ok, %Entry{id: "a/b/c.txt"}} = FS.write(fs(ctx), "a/b/c.txt", "deep")
       assert File.read!(Path.join(ctx.tmp_dir, "a/b/c.txt")) == "deep"
+    end
+
+    test "creates base_dir on first write", ctx do
+      new_dir = Path.join(ctx.tmp_dir, "brand_new")
+      fs = FS.new(base_dir: new_dir)
+      refute File.dir?(new_dir)
+
+      assert {:ok, %Entry{id: "hello.txt"}} = FS.write(fs, "hello.txt", "hi")
+      assert File.read!(Path.join(new_dir, "hello.txt")) == "hi"
     end
 
     test "returns error on read-only", ctx do
