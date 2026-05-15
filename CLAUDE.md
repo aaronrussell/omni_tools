@@ -10,8 +10,8 @@ For the design intent and the state of the work, see
 `omni_tools` is a small, opinionated set of **reference tools** for the
 [Omni](https://github.com/aaronrussell/omni) ecosystem. Each tool is an
 `Omni.Tool` implementation that ships ready-to-use *and* serves as a
-worked example of how to build tools for LLMs. The four tools currently
-in scope:
+worked example of how to build tools for LLMs. The tools currently in
+scope:
 
 - `Omni.Tools.Files` — CRUD over a configurable base directory,
   with read-only / flat / nested scope modes.
@@ -21,6 +21,9 @@ in scope:
   worked out.
 - `Omni.Tools.WebFetch` — fetches URLs, simplifies content (HTML →
   Markdown), supports batch fetch and configurable size limits.
+- `Omni.Tools.WebSearch` — web search with pluggable provider
+  backends (Brave, Serper, Tavily). API keys resolve via
+  `{:system, "ENV_VAR"}` tuples.
 
 The package is deliberately small — see [Scope rules](#scope-rules).
 
@@ -151,8 +154,11 @@ context makes the meaning obvious.
   configuration handling. No network access, no real shell exec.
 - For tools that touch the filesystem, use `tmp_dir: true` test tags
   and lean on ExUnit's automatic cleanup.
-- For tools that touch the network (`WebFetch`), use `Req.Test.stub`
-  with `plug` (test-only dep, mirrors `omni`'s pattern).
+- For tools that touch the network (`WebFetch`, `WebSearch`), use
+  `Req.Test.stub` with `plug` (test-only dep, mirrors `omni`'s
+  pattern). For `WebSearch` providers, stubs assert request shape
+  (headers, params, body) and return fixture JSON for response
+  parsing.
 - Where a tool exposes a configuration surface (scope modes,
   extensions, limits), exercise each branch — the configuration
   matrix *is* the contract.

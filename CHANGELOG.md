@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+### Added
+
+- **WebSearch** — web search tool with a pluggable provider backend. Ships with Brave, Serper, and Tavily providers. API keys resolve via `{:system, "ENV_VAR"}` tuples (matching the omni provider pattern). The model can control result count and recency filtering; additional provider-specific options pass through as-is.
+
 ### Changed
 
 - **Files** / **Files extension** — both now accept either a pre-built `%FS{}` struct via the `:fs` option or raw options (`:base_dir`, `:read_only`, `:nested`), so callers using both can share a single FS.

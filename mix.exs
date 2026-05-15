@@ -55,7 +55,8 @@ defmodule Omni.Tools.MixProject do
         Files: ~r/^Omni\.Tools\.Files/,
         Bash: ~r/^Omni\.Tools\.Bash/,
         Repl: ~r/^Omni\.Tools\.Repl/,
-        WebFetch: ~r/^Omni\.Tools\.WebFetch/
+        WebFetch: ~r/^Omni\.Tools\.WebFetch/,
+        WebSearch: ~r/^Omni\.Tools\.WebSearch/
       ]
     ]
   end

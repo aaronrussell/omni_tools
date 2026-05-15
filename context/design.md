@@ -13,7 +13,7 @@ sections sketch the intent; detail follows the work.
 
 ## 1. What the package is
 
-`omni_tools` ships a small, fixed set of reference `Omni.Tool`
+`omni_tools` ships a small, deliberate set of reference `Omni.Tool`
 implementations. The goals, in order:
 
 1. **Useful by default.** Each tool should be drop-in usable for
@@ -441,6 +441,97 @@ Snaps back to the last newline before the cut point. Appends:
 - **`binary_part` truncation** can split multi-byte UTF-8 codepoints at
   the cut point (same caveat as Bash/Repl).
 
+### 3.5 `Omni.Tools.WebSearch`
+
+Web search with pluggable provider backends.
+
+#### Module layout
+
+```
+lib/omni/tools/web_search.ex                      # Omni.Tool implementation (thin)
+lib/omni/tools/web_search/provider.ex              # Provider behaviour + validation
+lib/omni/tools/web_search/provider/brave.ex        # Brave Search API
+lib/omni/tools/web_search/provider/serper.ex       # Serper (Google) API
+lib/omni/tools/web_search/provider/tavily.ex       # Tavily Search API
+```
+
+**`Omni.Tools.WebSearch`** — the tool module. `use Omni.Tool`, `init/1`,
+`schema/0`, `call/2`. Thin; validates the provider at init, delegates
+to it in call.
+
+**`Omni.Tools.WebSearch.Provider`** — the behaviour and validation
+helper. Defines a single `search/2` callback and `validate!/1` for
+checking provider modules at init time.
+
+**`Provider.Brave`**, **`Provider.Serper`**, **`Provider.Tavily`** —
+concrete providers. Each maps normalised options (`num_results`,
+`recency`) to native API parameters and passes remaining options
+through to the API. Stateless — no `init/1`, just `search/2`.
+
+#### Configuration
+
+| Option      | Default | Effect                                             |
+| ----------- | ------- | -------------------------------------------------- |
+| `:provider` | (req'd) | Provider module or `{module, opts}` tuple.         |
+
+The tool itself has no other configuration — `num_results` and
+`recency` are schema-only (controlled by the model per invocation).
+
+#### Provider API key resolution
+
+Each provider resolves its API key via a three-layer merge:
+
+```
+module defaults → app config → explicit opts
+```
+
+The module default is a `{:system, "ENV_VAR"}` tuple (e.g.
+`{:system, "BRAVE_API_KEY"}`). App config is keyed by provider module:
+
+```elixir
+config :omni_tools, Omni.Tools.WebSearch.Provider.Brave, api_key: "..."
+```
+
+Explicit opts override both. The `{:system, var}` tuple is resolved
+at call time (not init time), so rotating keys or late-binding env
+vars work without rebuilding the tool.
+
+#### Provider behaviour
+
+Providers implement `Omni.Tools.WebSearch.Provider`:
+
+- `search(query, opts)` (required) — executes a web search, returns
+  `{:ok, [%{url, title, snippet}]}` or `{:error, reason}`.
+
+The tool's `call/2` merges provider config opts with runtime params
+(`num_results`, `recency`) and calls `search/2`. On `{:ok, results}`
+the tool formats results as numbered text. On `{:error, reason}` it
+raises so the model sees a tool error.
+
+#### Output format
+
+```
+1. Title of first result
+   https://example.com/page
+   Snippet describing the content...
+
+2. Title of second result
+   https://example.com/other
+   Another snippet here...
+```
+
+Empty results return `"No results found."` (successful tool result,
+not an error).
+
+#### Known boundaries
+
+- **No result caching.** Every call hits the provider API.
+- **Provider-specific options are opaque.** The tool passes them
+  through without validation — the provider API returns the error
+  if an option is invalid.
+- **Rate limits are the caller's problem.** The tool does not
+  throttle or queue requests.
+
 ---
 
 ## 4. Cross-cutting decisions
@@ -464,6 +555,11 @@ config :omni_tools, Omni.Tools.Bash, timeout: 60_000, env: [{"MIX_ENV", "prod"}]
 config :omni_tools, Omni.Tools.Repl, max_output: 100_000
 config :omni_tools, Omni.Tools.WebFetch, timeout: 30_000
 config :omni_tools, Omni.Tools.Files, read_only: true
+config :omni_tools, Omni.Tools.WebSearch, provider: Omni.Tools.WebSearch.Provider.Brave
+
+# Provider-level config (API keys, defaults)
+config :omni_tools, Omni.Tools.WebSearch.Provider.Brave, api_key: "..."
+config :omni_tools, Omni.Tools.WebSearch.Provider.Tavily, api_key: {:system, "MY_TAVILY_KEY"}
 ```
 
 App config is never required — tools must work with zero app config
@@ -474,18 +570,23 @@ and sensible module-level defaults. Required options with no default
 
 ## 5. Module layout
 
-To be filled in once the first tool is ported. Expected shape:
-
 ```
 lib/omni/tools/
-├── files.ex                      # public tool module
-├── files/                        # @moduledoc false helpers
+├── files.ex
+├── files/
 ├── repl.ex
 ├── repl/
 ├── bash.ex
 ├── bash/
 ├── web_fetch.ex
-└── web_fetch/
+├── web_fetch/
+├── web_search.ex
+└── web_search/
+    ├── provider.ex
+    └── provider/
+        ├── brave.ex
+        ├── serper.ex
+        └── tavily.ex
 ```
 
 Helpers internal to a tool live under that tool's namespace, marked
