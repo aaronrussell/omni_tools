@@ -22,8 +22,7 @@ in scope:
 - `Omni.Tools.WebFetch` — fetches URLs, simplifies content (HTML →
   Markdown), supports batch fetch and configurable size limits.
 
-That list is the whole package. We are deliberately strict about scope
-— see [Scope rules](#scope-rules).
+The package is deliberately small — see [Scope rules](#scope-rules).
 
 This is the **third package** of the Omni family:
 
@@ -62,8 +61,15 @@ must remain trivially installable. See [Scope rules](#scope-rules).
 These are firm. They exist because this package is meant to be a
 clean, maintainable reference — not an open-ended toolbox.
 
-- **No third-party service integrations.** No Slack, GitHub, Linear,
-  search APIs, etc. Those belong in downstream packages.
+- **Generic capabilities only — no product-specific integrations.**
+  Tools in this package implement universal agent capabilities (file
+  access, code execution, web fetch, web search) — things almost
+  every agent needs regardless of domain. Product-specific
+  integrations (Slack, GitHub, Linear, Jira, etc.) belong in
+  downstream packages. The test: if a tool implements a generic
+  capability behind a provider/adapter pattern (the way `omni` itself
+  abstracts over LLM providers), it fits here. If it bakes in
+  knowledge of a specific product's data model, it doesn't.
 - **No external runtimes.** No Python sidecars, no Node bridges, no
   Docker dependencies for the package itself (a tool *user* may
   configure one — `Bash` running inside a container is the user's
@@ -76,9 +82,9 @@ clean, maintainable reference — not an open-ended toolbox.
   ship the most secure sandbox or the fastest HTML simplifier — just
   solid examples that work and that other developers can fork or
   extend.
-- **The four tools listed above are the package.** New tool
-  proposals should go to a separate package or be argued for in
-  `context/roadmap.md` first — don't just add a fifth.
+- **Small and deliberate.** The tool list grows rarely and only for
+  capabilities that are genuinely fundamental to agents. New tool
+  proposals should be argued for in `context/roadmap.md` first.
 
 ## Conventions
 
@@ -178,9 +184,10 @@ context makes the meaning obvious.
   rails (path scoping, command allowlists, fetch limits) but they
   are not a replacement for OS-level sandboxing. Document the
   boundary; don't pretend it's stronger than it is.
-- **Don't bake third-party service knowledge into the package.** If a
-  tool needs to know about Slack or GitHub specifically, it's the
-  wrong package.
+- **Don't bake product-specific knowledge into the package.** If a
+  tool needs to know about Slack or Jira specifically, it's the
+  wrong package. Generic capability providers behind a behaviour
+  (search backends, content strategies) are fine.
 
 ## Where to look
 

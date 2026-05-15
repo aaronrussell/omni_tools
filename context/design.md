@@ -25,7 +25,9 @@ implementations. The goals, in order:
    copy these.
 3. **Trivial to install.** Pure Elixir plus a handful of mainstream
    hex deps. No external runtimes, no fragile native code, no
-   third-party service integrations.
+   product-specific service integrations. Generic capabilities with
+   swappable providers (web search engines, like LLM providers in
+   `omni`) are fine — the line is product-specific vs. universal.
 
 The package is opinionated and deliberately small. The full scope
 constraints live in `CLAUDE.md` § *Scope rules* — they apply to design
