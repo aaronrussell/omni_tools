@@ -1,0 +1,1 @@
+{"type":"ErrorResponse","error":{"id":"40b5f6df-dd80-43c5-b4de-e5608649680c","status":422,"detail":"The provided subscription token is invalid.","meta":{"component":"authentication"},"code":"SUBSCRIPTION_TOKEN_INVALID"},"time":1778862633}
