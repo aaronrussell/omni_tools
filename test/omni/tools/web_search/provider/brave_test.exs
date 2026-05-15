@@ -163,6 +163,7 @@ defmodule Omni.Tools.WebSearch.Provider.BraveTest do
       assert {:error, "Brave API 401: Unauthorized"} = Brave.search("test", opts)
     end
 
+    @tag capture_log: true
     test "returns error tuple on network failure" do
       opts =
         stub_brave(:brave_network, fn conn ->
@@ -171,6 +172,103 @@ defmodule Omni.Tools.WebSearch.Provider.BraveTest do
 
       assert {:error, message} = Brave.search("test", opts)
       assert message =~ "connection refused"
+    end
+  end
+
+  describe "config resolution" do
+    test "resolves {:system, var} api_key from environment" do
+      System.put_env("BRAVE_API_KEY", "env-key")
+      on_exit(fn -> System.delete_env("BRAVE_API_KEY") end)
+
+      Req.Test.stub(:brave_env, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-subscription-token") == ["env-key"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Brave.search("test", req: Req.new(plug: {Req.Test, :brave_env}))
+    end
+
+    test "resolves custom {:system, var} tuple" do
+      System.put_env("MY_BRAVE_KEY", "custom-env-key")
+      on_exit(fn -> System.delete_env("MY_BRAVE_KEY") end)
+
+      Req.Test.stub(:brave_custom_env, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-subscription-token") == ["custom-env-key"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Brave.search("test",
+        api_key: {:system, "MY_BRAVE_KEY"},
+        req: Req.new(plug: {Req.Test, :brave_custom_env})
+      )
+    end
+
+    test "raises when {:system, var} env var is not set" do
+      existing = System.get_env("BRAVE_API_KEY")
+      System.delete_env("BRAVE_API_KEY")
+      on_exit(fn -> if existing, do: System.put_env("BRAVE_API_KEY", existing) end)
+
+      assert_raise ArgumentError, ~r/environment variable BRAVE_API_KEY is not set/, fn ->
+        Brave.search("test", [])
+      end
+    end
+
+    test "resolves api_key from application config" do
+      Application.put_env(:omni_tools, Brave, api_key: "app-config-key")
+      on_exit(fn -> Application.delete_env(:omni_tools, Brave) end)
+
+      Req.Test.stub(:brave_app_config, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-subscription-token") == ["app-config-key"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Brave.search("test", req: Req.new(plug: {Req.Test, :brave_app_config}))
+    end
+
+    test "explicit string key overrides app config" do
+      Application.put_env(:omni_tools, Brave, api_key: "app-key")
+      on_exit(fn -> Application.delete_env(:omni_tools, Brave) end)
+
+      Req.Test.stub(:brave_override, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-subscription-token") == ["explicit-key"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Brave.search("test",
+        api_key: "explicit-key",
+        req: Req.new(plug: {Req.Test, :brave_override})
+      )
+    end
+
+    test "app config can provide non-key options" do
+      Application.put_env(:omni_tools, Brave, country: "GB")
+      on_exit(fn -> Application.delete_env(:omni_tools, Brave) end)
+
+      Req.Test.stub(:brave_app_opts, fn conn ->
+        params = Plug.Conn.fetch_query_params(conn).query_params
+        assert params["country"] == "GB"
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Brave.search("test",
+        api_key: "test-key",
+        req: Req.new(plug: {Req.Test, :brave_app_opts})
+      )
     end
   end
 end

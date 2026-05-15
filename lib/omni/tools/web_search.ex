@@ -23,7 +23,6 @@ defmodule Omni.Tools.WebSearch do
   ## Options
 
   - `:provider` — (required) a provider module or `{module, opts}` tuple.
-  - `:num_results` — default number of results to request. Default: `5`.
   """
 
   use Omni.Tool,
@@ -35,15 +34,10 @@ defmodule Omni.Tools.WebSearch do
 
   alias Omni.Tools.WebSearch.Provider
 
-  @defaults [
-    num_results: 5
-  ]
-
   @impl Omni.Tool
   def init(opts) do
     opts =
-      @defaults
-      |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
+      Application.get_env(:omni_tools, __MODULE__, [])
       |> Keyword.merge(opts || [])
 
     provider =
@@ -52,10 +46,7 @@ defmodule Omni.Tools.WebSearch do
         :error -> raise ArgumentError, ":provider is required"
       end
 
-    [
-      provider: provider,
-      num_results: Keyword.fetch!(opts, :num_results)
-    ]
+    [provider: provider]
   end
 
   @impl Omni.Tool
@@ -82,7 +73,7 @@ defmodule Omni.Tools.WebSearch do
 
     search_opts =
       provider_opts
-      |> Keyword.put(:num_results, input[:num_results] || Keyword.fetch!(state, :num_results))
+      |> Keyword.put(:num_results, input[:num_results] || 5)
       |> maybe_put(:recency, parse_recency(input[:recency]))
 
     case mod.search(query, search_opts) do

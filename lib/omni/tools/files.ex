@@ -46,7 +46,9 @@ defmodule Omni.Tools.Files do
   @impl Omni.Tool
   def init(opts) do
     case Keyword.get(opts, :fs) do
-      %FS{} = fs -> fs
+      %FS{} = fs ->
+        fs
+
       nil ->
         @defaults
         |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))

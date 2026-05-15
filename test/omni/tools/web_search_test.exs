@@ -36,16 +36,8 @@ defmodule Omni.Tools.WebSearchTest do
       assert %Omni.Tool{name: "web_search"} = WebSearch.new([])
     end
 
-    test "explicit opts override app config" do
-      Application.put_env(:omni_tools, WebSearch, num_results: 3)
-
-      on_exit(fn ->
-        Application.delete_env(:omni_tools, WebSearch)
-      end)
-
-      t = tool(num_results: 7)
-      result = t.handler.(%{query: "test"})
-      refute result =~ "3."
+    test "accepts bare module as provider" do
+      assert %Omni.Tool{name: "web_search"} = WebSearch.new(provider: TestProvider)
     end
   end
 
@@ -129,7 +121,7 @@ defmodule Omni.Tools.WebSearchTest do
       assert Keyword.fetch!(opts, :num_results) == 10
     end
 
-    test "uses default num_results when not in input" do
+    test "defaults num_results to 5 when not in input" do
       defmodule AssertDefaultNumResults do
         @behaviour Omni.Tools.WebSearch.Provider
 
@@ -140,11 +132,11 @@ defmodule Omni.Tools.WebSearchTest do
         end
       end
 
-      t = WebSearch.new(provider: {AssertDefaultNumResults, []}, num_results: 3)
+      t = WebSearch.new(provider: {AssertDefaultNumResults, []})
       t.handler.(%{query: "test"})
 
       assert_received {:search_opts, opts}
-      assert Keyword.fetch!(opts, :num_results) == 3
+      assert Keyword.fetch!(opts, :num_results) == 5
     end
 
     test "passes recency to provider as atom" do

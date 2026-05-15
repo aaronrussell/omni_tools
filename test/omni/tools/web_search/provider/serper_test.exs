@@ -169,6 +169,7 @@ defmodule Omni.Tools.WebSearch.Provider.SerperTest do
       assert {:error, "Serper API 401: Invalid API key"} = Serper.search("test", opts)
     end
 
+    @tag capture_log: true
     test "returns error tuple on network failure" do
       opts =
         stub_serper(:serper_network, fn conn ->
@@ -177,6 +178,66 @@ defmodule Omni.Tools.WebSearch.Provider.SerperTest do
 
       assert {:error, message} = Serper.search("test", opts)
       assert message =~ "connection refused"
+    end
+  end
+
+  describe "config resolution" do
+    test "resolves {:system, var} api_key from environment" do
+      System.put_env("SERPER_API_KEY", "env-key")
+      on_exit(fn -> System.delete_env("SERPER_API_KEY") end)
+
+      Req.Test.stub(:serper_env, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-api-key") == ["env-key"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Serper.search("test", req: Req.new(plug: {Req.Test, :serper_env}))
+    end
+
+    test "raises when {:system, var} env var is not set" do
+      existing = System.get_env("SERPER_API_KEY")
+      System.delete_env("SERPER_API_KEY")
+      on_exit(fn -> if existing, do: System.put_env("SERPER_API_KEY", existing) end)
+
+      assert_raise ArgumentError, ~r/environment variable SERPER_API_KEY is not set/, fn ->
+        Serper.search("test", [])
+      end
+    end
+
+    test "resolves api_key from application config" do
+      Application.put_env(:omni_tools, Serper, api_key: "app-config-key")
+      on_exit(fn -> Application.delete_env(:omni_tools, Serper) end)
+
+      Req.Test.stub(:serper_app_config, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-api-key") == ["app-config-key"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Serper.search("test", req: Req.new(plug: {Req.Test, :serper_app_config}))
+    end
+
+    test "explicit string key overrides app config" do
+      Application.put_env(:omni_tools, Serper, api_key: "app-key")
+      on_exit(fn -> Application.delete_env(:omni_tools, Serper) end)
+
+      Req.Test.stub(:serper_override, fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-api-key") == ["explicit-key"]
+
+        conn
+        |> Plug.Conn.put_resp_content_type("application/json")
+        |> Plug.Conn.send_resp(200, ok_body())
+      end)
+
+      Serper.search("test",
+        api_key: "explicit-key",
+        req: Req.new(plug: {Req.Test, :serper_override})
+      )
     end
   end
 end
