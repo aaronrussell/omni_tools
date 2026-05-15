@@ -3,7 +3,7 @@ defmodule Omni.Tools do
   ![License](https://img.shields.io/github/license/aaronrussell/omni_tools?color=informational)
 
   **Ready-to-use tools for Omni-powered agents** — filesystem, shell, REPL,
-  and web fetch. Built on [Omni](https://github.com/aaronrussell/omni).
+  web fetch, and web search. Built on [Omni](https://github.com/aaronrussell/omni).
 
   Omni Tools is a small set of reference `Omni.Tool` implementations that
   ship ready-to-use and serve as worked examples of how to build tools for
@@ -28,14 +28,16 @@ defmodule Omni.Tools do
   | `Omni.Tools.Bash` | Executes shell commands with timeout and output capture |
   | `Omni.Tools.Repl` | Evaluates Elixir code in a sandboxed peer node |
   | `Omni.Tools.WebFetch` | Fetches URLs, simplifies content for LLM consumption |
+  | `Omni.Tools.WebSearch` | Web search via pluggable providers (Brave, Serper, Tavily) |
 
   Each tool is created with `new/1` and returns an `%Omni.Tool{}` struct
   ready to pass into an Omni context:
 
-      fs   = Omni.Tools.Files.new(base_dir: "/data/workspace")
-      bash = Omni.Tools.Bash.new(dir: "/app")
-      repl = Omni.Tools.Repl.new()
-      web  = Omni.Tools.WebFetch.new()
+      fs     = Omni.Tools.Files.new(base_dir: "/data/workspace")
+      bash   = Omni.Tools.Bash.new(dir: "/app")
+      repl   = Omni.Tools.Repl.new()
+      fetch  = Omni.Tools.WebFetch.new()
+      search = Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Brave)
 
   ### Files
 
@@ -96,6 +98,21 @@ defmodule Omni.Tools do
 
   See `Omni.Tools.WebFetch` for all options and
   `Omni.Tools.WebFetch.Strategy` for the strategy behaviour.
+
+  ### WebSearch
+
+  Searches the web via pluggable provider backends. API keys resolve
+  from environment variables by default via `{:system, "ENV_VAR"}` tuples:
+
+      # Uses BRAVE_API_KEY env var
+      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Brave)
+
+      # Explicit key
+      alias Omni.Tools.WebSearch.Provider.Tavily
+      Omni.Tools.WebSearch.new(provider: {Tavily, api_key: "tvly-..."})
+
+  See `Omni.Tools.WebSearch` for all options and
+  `Omni.Tools.WebSearch.Provider` for the provider behaviour.
 
   ## Using tools in a conversation
 
