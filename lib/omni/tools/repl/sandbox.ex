@@ -10,6 +10,9 @@ defmodule Omni.Tools.Repl.Sandbox do
   (including application dependencies) are available. In dev, `Mix.install/1` can
   add additional dependencies since each peer is a fresh VM.
 
+  Communication with the peer uses the `:peer` module's stdio control channel,
+  so no Erlang distribution (EPMD) is required.
+
   The sandbox executes arbitrary code with full system access. It is best-effort
   isolation, not a security boundary. For trusted use cases only: agent-driven
   experimentation, scratchpad computation — not adversarial input.
@@ -25,7 +28,7 @@ defmodule Omni.Tools.Repl.Sandbox do
   ## Return values
 
       {:ok, %{output: "hello\\n", result: :ok}}
-      {:error, :timeout, %{output: "partial..."}}
+      {:error, :timeout, %{output: ""}}
       {:error, {:error, %ArithmeticError{}, stacktrace}, %{output: ""}}
 
   On success, `result` is the raw return value of the last expression (not
@@ -52,77 +55,40 @@ defmodule Omni.Tools.Repl.Sandbox do
     max_output = Keyword.get(opts, :max_output, @default_max_output)
     setup = Keyword.get(opts, :setup)
 
-    ensure_distributed!()
-    {peer_pid, peer_node} = start_peer()
-    init_peer(peer_node)
-
-    # StringIO lives on the host so it's always accessible — on timeout we can
-    # read partial output without an extra erpc call to the (possibly stuck) peer.
-    {:ok, io_pid} = StringIO.open("")
+    peer_pid = start_peer()
+    init_peer(peer_pid)
 
     try do
-      result = :erpc.call(peer_node, build_eval_fn(code, setup, io_pid), timeout)
+      result = :peer.call(peer_pid, __MODULE__, :eval_peer, [code, setup], timeout)
       truncate_result(result, max_output)
     catch
-      :error, {:erpc, :timeout} ->
-        {_, output} = StringIO.contents(io_pid)
-        {:error, :timeout, %{output: maybe_truncate(output, max_output)}}
+      :exit, {:timeout, _} ->
+        {:error, :timeout, %{output: ""}}
 
-      :error, {:erpc, :noconnection} ->
-        {_, output} = StringIO.contents(io_pid)
-        {:error, :noconnection, %{output: maybe_truncate(output, max_output)}}
+      :exit, _ ->
+        {:error, :noconnection, %{output: ""}}
     after
-      StringIO.close(io_pid)
       safely_stop_peer(peer_pid)
     end
   end
 
-  @doc """
-  Enables distributed mode on the host VM if not already active.
+  @doc false
+  def eval_peer(code, setup) do
+    eval_setup(setup)
 
-  Peer nodes require the host to be distributed (`Node.alive?()`). When the
-  VM was started without `--sname` / `--name`, this function starts EPMD and
-  enables distribution with a unique short name.
+    {:ok, io} = StringIO.open("")
+    Process.group_leader(self(), io)
 
-  Called automatically by `run/2` on each invocation (idempotent). You may
-  also call it explicitly at application boot to avoid flipping the VM into
-  distributed mode during a request — that flip can invalidate any PID-based
-  state (encoded tokens, cached process references, etc.) that was created
-  before distribution was enabled.
-
-      # In your Application.start/2:
-      Omni.Tools.Repl.Sandbox.ensure_distributed!()
-  """
-  @spec ensure_distributed!() :: :ok
-  def ensure_distributed! do
-    unless Node.alive?() do
-      ensure_epmd!()
-      name = :"omni_repl_#{System.unique_integer([:positive])}"
-
-      case Node.start(name, :shortnames) do
-        {:ok, _} -> :ok
-        {:error, {:already_started, _}} -> :ok
-      end
-    end
-
-    :ok
-  end
-
-  defp build_eval_fn(code, setup, io_pid) do
-    fn ->
-      eval_setup(setup)
-
-      Process.group_leader(self(), io_pid)
-
-      try do
-        {result, _bindings} = Code.eval_string(code)
-        {_, output} = StringIO.contents(io_pid)
-        {:ok, %{output: output, result: result}}
-      catch
-        kind, reason ->
-          {_, output} = StringIO.contents(io_pid)
-          {:error, {kind, reason, __STACKTRACE__}, %{output: output}}
-      end
+    try do
+      {result, _bindings} = Code.eval_string(code)
+      {_, output} = StringIO.contents(io)
+      {:ok, %{output: output, result: result}}
+    catch
+      kind, reason ->
+        {_, output} = StringIO.contents(io)
+        {:error, {kind, reason, __STACKTRACE__}, %{output: output}}
+    after
+      StringIO.close(io)
     end
   end
 
@@ -131,37 +97,19 @@ defmodule Omni.Tools.Repl.Sandbox do
   defp eval_setup(items) when is_list(items), do: Enum.each(items, &eval_setup/1)
   defp eval_setup(ast), do: Code.eval_quoted(ast)
 
-  defp init_peer(peer_node) do
-    :erpc.call(peer_node, :code, :add_pathsa, [:code.get_path()])
-    :erpc.call(peer_node, :application, :ensure_all_started, [:elixir])
-    :erpc.call(peer_node, :logger, :set_primary_config, [:level, :warning])
-  end
-
-  defp ensure_epmd! do
-    case :erl_epmd.names() do
-      {:ok, _} -> :ok
-      {:error, _} -> :os.cmd(~c"epmd -daemon")
-    end
+  defp init_peer(peer_pid) do
+    :peer.call(peer_pid, :code, :add_pathsa, [:code.get_path()])
+    :peer.call(peer_pid, :application, :ensure_all_started, [:elixir])
+    :peer.call(peer_pid, :logger, :set_primary_config, [:level, :warning])
   end
 
   defp start_peer do
-    id = System.unique_integer([:positive])
-
-    opts =
-      if :net_kernel.longnames() do
-        %{name: ~c"omni_repl_#{id}", host: ~c"127.0.0.1", longnames: true}
-      else
-        %{name: :"omni_repl_#{id}"}
-      end
-
-    {:ok, pid, node} = :peer.start(opts)
-    {pid, node}
+    {:ok, pid, _node} = :peer.start(%{connection: :standard_io})
+    pid
   end
 
   defp safely_stop_peer(pid) do
-    :peer.stop(pid)
-  catch
-    :exit, _ -> :ok
+    Process.exit(pid, :kill)
   end
 
   defp truncate_result({:ok, %{output: output, result: result}}, max) do

@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Changed
 
+- **Repl / Sandbox** — peer nodes now communicate over stdio (`connection: :standard_io`) instead of Erlang distribution. This removes the dependency on EPMD and `ensure_distributed!/0` (which has been removed). Peer boot is faster and no longer subject to intermittent hangs from EPMD/port contention.
 - **Files** / **Files extension** — both now accept either a pre-built `%FS{}` struct via the `:fs` option or raw options (`:base_dir`, `:read_only`, `:nested`), so callers using both can share a single FS.
 - **Files.FS** — `base_dir` no longer needs to exist at init time. The directory is created automatically on the first write.
 

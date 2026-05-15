@@ -7,14 +7,7 @@ freely, clean it up as items land or get rethought.
 
 ## Scheduled
 
-- **Flaky Repl peer timeouts** — `Omni.Tools.ReplTest` "call successful
-  code execution" (`repl_test.exs:110`) and
-  `Omni.Tools.Repl.Extensions.FilesTest` "sandbox integration list
-  returns entries after write" (`extensions/files_test.exs:76`) both
-  intermittently fail with `(exit) time out` during `:peer.start_it/2`.
-  Likely a race under concurrent peer node startup. Investigate whether
-  `ensure_distributed!/0` has a timing issue or whether the tests need
-  serial execution / longer timeouts.
+*(empty)*
 
 ---
 

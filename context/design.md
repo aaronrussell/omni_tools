@@ -182,19 +182,19 @@ construction time, not re-evaluated on each tool use.
 
 - **Fresh peer per invocation.** No state carries over between calls.
   Each `run/2` starts a new `:peer` node and stops it afterward.
-- **IO capture.** A host-side `StringIO` captures all peer output.
-  On timeout, partial output is still readable since the StringIO
-  lives on the host.
+- **Stdio communication.** Peers are started with
+  `connection: :standard_io` and all communication uses `:peer.call`
+  over the stdio control channel. No Erlang distribution (EPMD) is
+  required — the host VM does not need to be distributed.
+- **IO capture.** A peer-side `StringIO` captures all output during
+  code evaluation. On timeout, partial output is not available (the
+  peer may be stuck).
 - **Setup code.** Extensions inject code (string or AST) that runs in
   the peer before the user's code and before IO capture begins.
   Setup output is not included in the result.
 - **Host code paths.** The peer inherits all host code paths via
   `:code.add_pathsa/1`, so application dependencies are available.
   `Mix.install/1` can add extra packages in dev (each peer is fresh).
-- **Distribution.** Peer nodes require the host VM to be distributed.
-  `Sandbox.ensure_distributed!/0` handles this lazily (idempotent).
-  Callers may invoke it at application boot to avoid the distribution
-  flip on first tool use.
 
 Return type:
 
@@ -217,8 +217,9 @@ in the tool description shown to the model.
 - Full system access in the peer — file system, network, etc.
 - `binary_part` truncation can split multi-byte UTF-8 codepoints.
 - No persistent REPL state — each invocation is independent.
-- `ensure_distributed!` has a race window under concurrent first
-  calls; handled by accepting `{:error, {:already_started, _}}`.
+- On timeout, partial IO output is not available (the peer's
+  `StringIO` cannot be read from the host via the stdio channel
+  while the eval is still running).
 
 ### 3.3 `Omni.Tools.Bash`
 
