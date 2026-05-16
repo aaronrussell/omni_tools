@@ -37,7 +37,7 @@ defmodule Omni.Tools do
       bash   = Omni.Tools.Bash.new(dir: "/app")
       repl   = Omni.Tools.Repl.new()
       fetch  = Omni.Tools.WebFetch.new()
-      search = Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Brave)
+      search = Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Providers.Brave)
 
   ### Files
 
@@ -105,10 +105,10 @@ defmodule Omni.Tools do
   from environment variables by default via `{:system, "ENV_VAR"}` tuples:
 
       # Uses BRAVE_API_KEY env var
-      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Brave)
+      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Providers.Brave)
 
       # Explicit key
-      alias Omni.Tools.WebSearch.Provider.Tavily
+      alias Omni.Tools.WebSearch.Providers.Tavily
       Omni.Tools.WebSearch.new(provider: {Tavily, api_key: "tvly-..."})
 
   See `Omni.Tools.WebSearch` for all options and

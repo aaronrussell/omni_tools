@@ -324,12 +324,12 @@ Fetches content from URLs, simplifies it for LLM consumption.
 #### Module layout
 
 ```
-lib/omni/tools/web_fetch.ex                    # Omni.Tool implementation (thin)
-lib/omni/tools/web_fetch/fetcher.ex             # HTTP orchestration, batch, truncation
-lib/omni/tools/web_fetch/strategy.ex            # Strategy behaviour + resolution
-lib/omni/tools/web_fetch/strategy/default.ex    # Generic content handler
-lib/omni/tools/web_fetch/strategy/github.ex     # GitHub raw file redirect
-lib/omni/tools/web_fetch/strategy/reddit.ex     # Reddit JSON extraction
+lib/omni/tools/web_fetch.ex                       # Omni.Tool implementation (thin)
+lib/omni/tools/web_fetch/fetcher.ex                # HTTP orchestration, batch, truncation
+lib/omni/tools/web_fetch/strategy.ex               # Strategy behaviour + resolution
+lib/omni/tools/web_fetch/strategies/default.ex     # Generic content handler
+lib/omni/tools/web_fetch/strategies/github.ex      # GitHub raw file redirect
+lib/omni/tools/web_fetch/strategies/reddit.ex      # Reddit JSON extraction
 ```
 
 **`Omni.Tools.WebFetch`** — the tool module. `use Omni.Tool`, `init/1`,
@@ -346,16 +346,16 @@ behaviour and providing `resolve/1` (normalizes strategy specs) and
 `find/2` (first-match dispatch). Strategies are the extensibility
 mechanism for site-specific content extraction.
 
-**`Omni.Tools.WebFetch.Strategy.Default`** — catch-all strategy.
+**`Omni.Tools.WebFetch.Strategies.Default`** — catch-all strategy.
 Content-type dispatch: HTML → Markdown (via `html2markdown`), JSON →
 pretty-printed, `text/*` → passthrough, everything else → metadata.
 
-**`Omni.Tools.WebFetch.Strategy.GitHub`** — matches `github.com` blob
+**`Omni.Tools.WebFetch.Strategies.GitHub`** — matches `github.com` blob
 URLs. Rewrites to `raw.githubusercontent.com` so the LLM gets the raw
 file content instead of the GitHub HTML page. Non-blob GitHub URLs
 (issues, PRs, repo pages) fall through to the Default strategy.
 
-**`Omni.Tools.WebFetch.Strategy.Reddit`** — matches `*.reddit.com`.
+**`Omni.Tools.WebFetch.Strategies.Reddit`** — matches `*.reddit.com`.
 Rewrites URL to Reddit's JSON API (`.json` suffix), formats posts and
 comments as readable Markdown.
 
@@ -451,9 +451,9 @@ Web search with pluggable provider backends.
 ```
 lib/omni/tools/web_search.ex                      # Omni.Tool implementation (thin)
 lib/omni/tools/web_search/provider.ex              # Provider behaviour + validation
-lib/omni/tools/web_search/provider/brave.ex        # Brave Search API
-lib/omni/tools/web_search/provider/serper.ex       # Serper (Google) API
-lib/omni/tools/web_search/provider/tavily.ex       # Tavily Search API
+lib/omni/tools/web_search/providers/brave.ex       # Brave Search API
+lib/omni/tools/web_search/providers/serper.ex      # Serper (Google) API
+lib/omni/tools/web_search/providers/tavily.ex      # Tavily Search API
 ```
 
 **`Omni.Tools.WebSearch`** — the tool module. `use Omni.Tool`, `init/1`,
@@ -464,7 +464,7 @@ to it in call.
 helper. Defines a single `search/2` callback and `validate!/1` for
 checking provider modules at init time.
 
-**`Provider.Brave`**, **`Provider.Serper`**, **`Provider.Tavily`** —
+**`Providers.Brave`**, **`Providers.Serper`**, **`Providers.Tavily`** —
 concrete providers. Each maps normalised options (`num_results`,
 `recency`) to native API parameters and passes remaining options
 through to the API. Stateless — no `init/1`, just `search/2`.
@@ -490,7 +490,7 @@ The module default is a `{:system, "ENV_VAR"}` tuple (e.g.
 `{:system, "BRAVE_API_KEY"}`). App config is keyed by provider module:
 
 ```elixir
-config :omni_tools, Omni.Tools.WebSearch.Provider.Brave, api_key: "..."
+config :omni_tools, Omni.Tools.WebSearch.Providers.Brave, api_key: "..."
 ```
 
 Explicit opts override both. The `{:system, var}` tuple is resolved
@@ -556,11 +556,11 @@ config :omni_tools, Omni.Tools.Bash, timeout: 60_000, env: [{"MIX_ENV", "prod"}]
 config :omni_tools, Omni.Tools.Repl, max_output: 100_000
 config :omni_tools, Omni.Tools.WebFetch, timeout: 30_000
 config :omni_tools, Omni.Tools.Files, read_only: true
-config :omni_tools, Omni.Tools.WebSearch, provider: Omni.Tools.WebSearch.Provider.Brave
+config :omni_tools, Omni.Tools.WebSearch, provider: Omni.Tools.WebSearch.Providers.Brave
 
 # Provider-level config (API keys, defaults)
-config :omni_tools, Omni.Tools.WebSearch.Provider.Brave, api_key: "..."
-config :omni_tools, Omni.Tools.WebSearch.Provider.Tavily, api_key: {:system, "MY_TAVILY_KEY"}
+config :omni_tools, Omni.Tools.WebSearch.Providers.Brave, api_key: "..."
+config :omni_tools, Omni.Tools.WebSearch.Providers.Tavily, api_key: {:system, "MY_TAVILY_KEY"}
 ```
 
 App config is never required — tools must work with zero app config
@@ -581,10 +581,16 @@ lib/omni/tools/
 ├── bash/
 ├── web_fetch.ex
 ├── web_fetch/
+│   ├── fetcher.ex
+│   ├── strategy.ex
+│   └── strategies/
+│       ├── default.ex
+│       ├── github.ex
+│       └── reddit.ex
 ├── web_search.ex
 └── web_search/
     ├── provider.ex
-    └── provider/
+    └── providers/
         ├── brave.ex
         ├── serper.ex
         └── tavily.ex

@@ -17,7 +17,7 @@ defmodule Omni.Tools.WebFetch.FetcherTest do
   use ExUnit.Case, async: true
 
   alias Omni.Tools.WebFetch.Fetcher
-  alias Omni.Tools.WebFetch.Strategy.Default
+  alias Omni.Tools.WebFetch.Strategies.Default
   alias Omni.Tools.WebFetch.TestStrategy
 
   defp default_strategies, do: [{Default, []}]

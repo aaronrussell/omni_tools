@@ -1,7 +1,7 @@
-defmodule Omni.Tools.WebSearch.Provider.SerperTest do
+defmodule Omni.Tools.WebSearch.Providers.SerperTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.WebSearch.Provider.Serper
+  alias Omni.Tools.WebSearch.Providers.Serper
 
   @fixtures_dir Path.expand("../../../../support/fixtures", __DIR__)
 

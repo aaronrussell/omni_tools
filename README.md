@@ -103,21 +103,21 @@ environment variables by default:
 
 ```elixir
 # Uses BRAVE_API_KEY env var
-Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Brave)
+Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Providers.Brave)
 
 # Explicit key
-alias Omni.Tools.WebSearch.Provider.Tavily
+alias Omni.Tools.WebSearch.Providers.Tavily
 Omni.Tools.WebSearch.new(provider: {Tavily, api_key: "tvly-..."})
 
 # Custom env var
-alias Omni.Tools.WebSearch.Provider.Serper
+alias Omni.Tools.WebSearch.Providers.Serper
 Omni.Tools.WebSearch.new(provider: {Serper, api_key: {:system, "MY_SERPER_KEY"}})
 ```
 
 Providers can also be configured via application config:
 
 ```elixir
-config :omni_tools, Omni.Tools.WebSearch.Provider.Brave, api_key: "..."
+config :omni_tools, Omni.Tools.WebSearch.Providers.Brave, api_key: "..."
 ```
 
 ## Using tools in a conversation

@@ -1,20 +1,20 @@
-defmodule Omni.Tools.WebSearch.Provider.Brave do
+defmodule Omni.Tools.WebSearch.Providers.Brave do
   @moduledoc """
   Brave Search provider for `Omni.Tools.WebSearch`.
 
   Uses the [Brave Web Search API](https://api.search.brave.com).
 
       # Uses BRAVE_API_KEY env var by default
-      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Brave)
+      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Providers.Brave)
 
       # Explicit API key
       Omni.Tools.WebSearch.new(
-        provider: {Omni.Tools.WebSearch.Provider.Brave, api_key: "..."}
+        provider: {Omni.Tools.WebSearch.Providers.Brave, api_key: "..."}
       )
 
       # Custom env var
       Omni.Tools.WebSearch.new(
-        provider: {Omni.Tools.WebSearch.Provider.Brave, api_key: {:system, "MY_BRAVE_KEY"}}
+        provider: {Omni.Tools.WebSearch.Providers.Brave, api_key: {:system, "MY_BRAVE_KEY"}}
       )
 
   ## API key resolution
@@ -23,7 +23,7 @@ defmodule Omni.Tools.WebSearch.Provider.Brave do
   The default is `{:system, "BRAVE_API_KEY"}`. Resolution order:
 
   1. Explicit `:api_key` in provider opts
-  2. Application config: `config :omni_tools, Provider.Brave, api_key: "..."`
+  2. Application config: `config :omni_tools, Providers.Brave, api_key: "..."`
   3. Module default: `{:system, "BRAVE_API_KEY"}`
 
   ## Options

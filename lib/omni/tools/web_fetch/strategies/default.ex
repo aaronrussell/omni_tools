@@ -1,4 +1,4 @@
-defmodule Omni.Tools.WebFetch.Strategy.Default do
+defmodule Omni.Tools.WebFetch.Strategies.Default do
   @moduledoc false
 
   @behaviour Omni.Tools.WebFetch.Strategy

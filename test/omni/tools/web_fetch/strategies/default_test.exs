@@ -1,7 +1,7 @@
-defmodule Omni.Tools.WebFetch.Strategy.DefaultTest do
+defmodule Omni.Tools.WebFetch.Strategies.DefaultTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.WebFetch.Strategy.Default
+  alias Omni.Tools.WebFetch.Strategies.Default
 
   defp response(body, content_type) do
     headers = if content_type, do: %{"content-type" => [content_type]}, else: %{}

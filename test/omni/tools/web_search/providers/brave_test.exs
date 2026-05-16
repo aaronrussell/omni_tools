@@ -1,7 +1,7 @@
-defmodule Omni.Tools.WebSearch.Provider.BraveTest do
+defmodule Omni.Tools.WebSearch.Providers.BraveTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.WebSearch.Provider.Brave
+  alias Omni.Tools.WebSearch.Providers.Brave
 
   @fixtures_dir Path.expand("../../../../support/fixtures", __DIR__)
 

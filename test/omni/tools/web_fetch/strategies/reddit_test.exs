@@ -1,7 +1,7 @@
-defmodule Omni.Tools.WebFetch.Strategy.RedditTest do
+defmodule Omni.Tools.WebFetch.Strategies.RedditTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.WebFetch.Strategy.Reddit
+  alias Omni.Tools.WebFetch.Strategies.Reddit
 
   describe "match?/2" do
     test "matches www.reddit.com" do

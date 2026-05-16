@@ -1,4 +1,4 @@
-defmodule Omni.Tools.WebFetch.Strategy.GitHub do
+defmodule Omni.Tools.WebFetch.Strategies.GitHub do
   @moduledoc false
 
   @behaviour Omni.Tools.WebFetch.Strategy

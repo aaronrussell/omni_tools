@@ -1,20 +1,20 @@
-defmodule Omni.Tools.WebSearch.Provider.Tavily do
+defmodule Omni.Tools.WebSearch.Providers.Tavily do
   @moduledoc """
   Tavily Search provider for `Omni.Tools.WebSearch`.
 
   Uses the [Tavily Search API](https://tavily.com).
 
       # Uses TAVILY_API_KEY env var by default
-      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Tavily)
+      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Providers.Tavily)
 
       # Explicit API key
       Omni.Tools.WebSearch.new(
-        provider: {Omni.Tools.WebSearch.Provider.Tavily, api_key: "..."}
+        provider: {Omni.Tools.WebSearch.Providers.Tavily, api_key: "..."}
       )
 
       # Custom env var
       Omni.Tools.WebSearch.new(
-        provider: {Omni.Tools.WebSearch.Provider.Tavily, api_key: {:system, "MY_TAVILY_KEY"}}
+        provider: {Omni.Tools.WebSearch.Providers.Tavily, api_key: {:system, "MY_TAVILY_KEY"}}
       )
 
   ## API key resolution

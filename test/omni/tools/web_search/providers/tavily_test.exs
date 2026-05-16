@@ -1,7 +1,7 @@
-defmodule Omni.Tools.WebSearch.Provider.TavilyTest do
+defmodule Omni.Tools.WebSearch.Providers.TavilyTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.WebSearch.Provider.Tavily
+  alias Omni.Tools.WebSearch.Providers.Tavily
 
   @fixtures_dir Path.expand("../../../../support/fixtures", __DIR__)
 

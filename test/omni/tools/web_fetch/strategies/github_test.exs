@@ -1,7 +1,7 @@
-defmodule Omni.Tools.WebFetch.Strategy.GitHubTest do
+defmodule Omni.Tools.WebFetch.Strategies.GitHubTest do
   use ExUnit.Case, async: true
 
-  alias Omni.Tools.WebFetch.Strategy.GitHub
+  alias Omni.Tools.WebFetch.Strategies.GitHub
 
   describe "match?/2" do
     test "matches github.com blob URLs" do

@@ -1,20 +1,20 @@
-defmodule Omni.Tools.WebSearch.Provider.Serper do
+defmodule Omni.Tools.WebSearch.Providers.Serper do
   @moduledoc """
   Serper provider for `Omni.Tools.WebSearch`.
 
   Uses the [Serper Google Search API](https://serper.dev).
 
       # Uses SERPER_API_KEY env var by default
-      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Provider.Serper)
+      Omni.Tools.WebSearch.new(provider: Omni.Tools.WebSearch.Providers.Serper)
 
       # Explicit API key
       Omni.Tools.WebSearch.new(
-        provider: {Omni.Tools.WebSearch.Provider.Serper, api_key: "..."}
+        provider: {Omni.Tools.WebSearch.Providers.Serper, api_key: "..."}
       )
 
       # Custom env var
       Omni.Tools.WebSearch.new(
-        provider: {Omni.Tools.WebSearch.Provider.Serper, api_key: {:system, "MY_SERPER_KEY"}}
+        provider: {Omni.Tools.WebSearch.Providers.Serper, api_key: {:system, "MY_SERPER_KEY"}}
       )
 
   ## API key resolution

@@ -1,4 +1,4 @@
-defmodule Omni.Tools.WebFetch.Strategy.Reddit do
+defmodule Omni.Tools.WebFetch.Strategies.Reddit do
   @moduledoc false
 
   @behaviour Omni.Tools.WebFetch.Strategy

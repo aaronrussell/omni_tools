@@ -55,7 +55,7 @@ defmodule Omni.Tools.WebFetch do
   use Omni.Tool, name: "web_fetch"
 
   alias Omni.Tools.WebFetch.{Fetcher, Strategy}
-  alias Omni.Tools.WebFetch.Strategy.{Default, GitHub, Reddit}
+  alias Omni.Tools.WebFetch.Strategies.{Default, GitHub, Reddit}
 
   @defaults [
     strategies: [],
