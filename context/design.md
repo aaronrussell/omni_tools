@@ -96,7 +96,7 @@ The Files tool and the `Omni.Tools.Repl.Extensions.Files` extension
 accept the same options, so callers can pass a single `%FS{}` to both
 or build from raw options independently.
 
-All options (except `:fs`) support application config (see § 4).
+All options support application config (see § 4).
 
 #### Path policy
 
@@ -504,10 +504,12 @@ Providers implement `Omni.Tools.WebSearch.Provider`:
 - `search(query, opts)` (required) — executes a web search, returns
   `{:ok, [%{url, title, snippet}]}` or `{:error, reason}`.
 
-The tool's `call/2` merges provider config opts with runtime params
-(`num_results`, `recency`) and calls `search/2`. On `{:ok, results}`
-the tool formats results as numbered text. On `{:error, reason}` it
-raises so the model sees a tool error.
+The tool's `call/2` passes provider config opts to `search/2`,
+adding `num_results` and `recency` when the model supplies them
+(these always take precedence over any constructor opts with the
+same keys). On `{:ok, results}` the tool formats results as
+numbered text. On `{:error, reason}` it raises so the model sees
+a tool error.
 
 #### Output format
 
@@ -558,7 +560,7 @@ config :omni_tools, Omni.Tools.WebFetch, timeout: 30_000
 config :omni_tools, Omni.Tools.Files, read_only: true
 config :omni_tools, Omni.Tools.WebSearch, provider: Omni.Tools.WebSearch.Providers.Brave
 
-# Provider-level config (API keys, defaults)
+# Provider-level config (api_key only — other options are constructor-only)
 config :omni_tools, Omni.Tools.WebSearch.Providers.Brave, api_key: "..."
 config :omni_tools, Omni.Tools.WebSearch.Providers.Tavily, api_key: {:system, "MY_TAVILY_KEY"}
 ```

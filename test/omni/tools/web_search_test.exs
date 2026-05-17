@@ -121,7 +121,7 @@ defmodule Omni.Tools.WebSearchTest do
       assert Keyword.fetch!(opts, :num_results) == 10
     end
 
-    test "defaults num_results to 5 when not in input" do
+    test "does not pass num_results when not in input" do
       defmodule AssertDefaultNumResults do
         @behaviour Omni.Tools.WebSearch.Provider
 
@@ -136,7 +136,7 @@ defmodule Omni.Tools.WebSearchTest do
       t.handler.(%{query: "test"})
 
       assert_received {:search_opts, opts}
-      assert Keyword.fetch!(opts, :num_results) == 5
+      refute Keyword.has_key?(opts, :num_results)
     end
 
     test "passes recency to provider as atom" do

@@ -252,23 +252,21 @@ defmodule Omni.Tools.WebSearch.Providers.BraveTest do
       )
     end
 
-    test "app config can provide non-key options" do
-      Application.put_env(:omni_tools, Brave, country: "GB")
+    test "app config only affects api_key, not other options" do
+      Application.put_env(:omni_tools, Brave, api_key: "app-key", country: "GB")
       on_exit(fn -> Application.delete_env(:omni_tools, Brave) end)
 
-      Req.Test.stub(:brave_app_opts, fn conn ->
+      Req.Test.stub(:brave_app_key_only, fn conn ->
         params = Plug.Conn.fetch_query_params(conn).query_params
-        assert params["country"] == "GB"
+        assert conn |> Plug.Conn.get_req_header("x-subscription-token") == ["app-key"]
+        refute Map.has_key?(params, "country")
 
         conn
         |> Plug.Conn.put_resp_content_type("application/json")
         |> Plug.Conn.send_resp(200, ok_body())
       end)
 
-      Brave.search("test",
-        api_key: "test-key",
-        req: Req.new(plug: {Req.Test, :brave_app_opts})
-      )
+      Brave.search("test", req: Req.new(plug: {Req.Test, :brave_app_key_only}))
     end
   end
 end

@@ -23,6 +23,17 @@ defmodule Omni.Tools.WebSearch do
   ## Options
 
   - `:provider` — (required) a provider module or `{module, opts}` tuple.
+
+  ## Application config
+
+  Any option can be set under the module key in application config —
+  instance opts to `new/1` take precedence. See `Omni.Tools` for details.
+
+      config :omni_tools, Omni.Tools.WebSearch,
+        provider: Omni.Tools.WebSearch.Providers.Brave
+
+  Providers support application config for `:api_key` only — see each
+  provider module for details.
   """
 
   use Omni.Tool,
@@ -73,7 +84,7 @@ defmodule Omni.Tools.WebSearch do
 
     search_opts =
       provider_opts
-      |> Keyword.put(:num_results, input[:num_results] || 5)
+      |> maybe_put(:num_results, input[:num_results])
       |> maybe_put(:recency, parse_recency(input[:recency]))
 
     case mod.search(query, search_opts) do

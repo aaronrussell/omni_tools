@@ -159,6 +159,11 @@ defmodule Omni.Tools do
   No application config is required — every tool works with zero config
   and sensible defaults.
 
+  Web search providers support application config for `:api_key` only:
+
+      config :omni_tools, Omni.Tools.WebSearch.Providers.Brave,
+        api_key: {:system, "MY_BRAVE_KEY"}
+
   ## Writing custom tools
 
   These tools implement the `Omni.Tool` behaviour from the `omni` package.

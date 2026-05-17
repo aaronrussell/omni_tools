@@ -30,6 +30,15 @@ defmodule Omni.Tools.Repl do
   - `:timeout` — execution timeout in milliseconds. Default `60_000`.
   - `:max_output` — output truncation limit in bytes. Default `50_000`.
   - `:extensions` — list of extensions (module tuples or `%Extension{}`).
+
+  ## Application config
+
+  Any option can be set under the module key in application config —
+  instance opts to `new/1` take precedence. See `Omni.Tools` for details.
+
+      config :omni_tools, Omni.Tools.Repl,
+        timeout: 30_000,
+        max_output: 10_000
   """
 
   use Omni.Tool, name: "repl"

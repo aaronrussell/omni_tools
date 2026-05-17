@@ -48,13 +48,13 @@ defmodule Omni.Tools.WebSearch.Providers.Brave do
     year: "py"
   }
 
-  @defaults [api_key: {:system, "BRAVE_API_KEY"}]
+  @default_api_key {:system, "BRAVE_API_KEY"}
 
   @impl true
   def search(query, opts) do
-    opts = resolve_opts(opts)
-    {api_key, opts} = Keyword.pop!(opts, :api_key)
+    opts = resolve_api_key(opts)
     {req, opts} = Keyword.pop(opts, :req, Req.new())
+    {api_key, opts} = Keyword.pop(opts, :api_key)
     {num_results, opts} = Keyword.pop(opts, :num_results, 5)
     {recency, opts} = Keyword.pop(opts, :recency)
 
@@ -106,24 +106,25 @@ defmodule Omni.Tools.WebSearch.Providers.Brave do
 
   defp error_message(status, _body), do: "Brave API #{status}"
 
-  defp resolve_opts(opts) do
-    @defaults
-    |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
-    |> Keyword.merge(opts)
-    |> resolve_api_key()
-  end
-
   defp resolve_api_key(opts) do
-    case Keyword.fetch!(opts, :api_key) do
-      key when is_binary(key) ->
-        opts
+    api_key =
+      opts[:api_key] ||
+        Application.get_env(:omni_tools, __MODULE__, [])[:api_key] ||
+        @default_api_key
 
-      {:system, env_var} ->
-        case System.get_env(env_var) do
-          nil -> raise ArgumentError, "environment variable #{env_var} is not set"
-          key -> Keyword.put(opts, :api_key, key)
-        end
-    end
+    api_key =
+      case api_key do
+        key when is_binary(key) ->
+          key
+
+        {:system, env_var} ->
+          System.get_env(env_var) ||
+            raise ArgumentError, "environment variable #{env_var} is not set"
+      end
+
+    opts
+    |> Keyword.delete(:api_key)
+    |> Keyword.put(:api_key, api_key)
   end
 
   defp maybe_put(opts, _key, nil), do: opts

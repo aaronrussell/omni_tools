@@ -32,6 +32,15 @@ defmodule Omni.Tools.Files do
     directory (created on first write if it doesn't exist).
   - `:read_only` — restricts to `read` and `list` only. Default `false`.
   - `:nested` — allows subdirectory paths in ids. Default `true`.
+
+  ## Application config
+
+  Any option can be set under the module key in application config —
+  instance opts to `new/1` take precedence. See `Omni.Tools` for details.
+
+      config :omni_tools, Omni.Tools.Files,
+        read_only: true,
+        nested: false
   """
 
   use Omni.Tool, name: "files"
@@ -45,15 +54,14 @@ defmodule Omni.Tools.Files do
 
   @impl Omni.Tool
   def init(opts) do
-    case Keyword.get(opts, :fs) do
-      %FS{} = fs ->
-        fs
+    opts =
+      @defaults
+      |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
+      |> Keyword.merge(opts || [])
 
-      nil ->
-        @defaults
-        |> Keyword.merge(Application.get_env(:omni_tools, __MODULE__, []))
-        |> Keyword.merge(opts || [])
-        |> FS.new()
+    case Keyword.get(opts, :fs) do
+      %FS{} = fs -> fs
+      nil -> FS.new(opts)
     end
   end
 

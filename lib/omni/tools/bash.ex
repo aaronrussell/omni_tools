@@ -22,6 +22,15 @@ defmodule Omni.Tools.Bash do
   - `:shell` — explicit shell as `{executable, args}` tuple.
     Default: auto-resolved (bash then sh fallback).
   - `:command_prefix` — string prepended to every command. Default `nil`.
+
+  ## Application config
+
+  Any option can be set under the module key in application config —
+  instance opts to `new/1` take precedence. See `Omni.Tools` for details.
+
+      config :omni_tools, Omni.Tools.Bash,
+        timeout: 60_000,
+        max_output: 100_000
   """
 
   use Omni.Tool, name: "bash"

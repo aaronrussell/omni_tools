@@ -50,6 +50,15 @@ defmodule Omni.Tools.WebFetch do
     `:infinity` to disable truncation. Default: `100_000`.
   - `:max_urls` — maximum number of URLs per batch call. Default: `10`.
   - `:timeout` — HTTP receive timeout in milliseconds. Default: `15_000`.
+
+  ## Application config
+
+  Any option can be set under the module key in application config —
+  instance opts to `new/1` take precedence. See `Omni.Tools` for details.
+
+      config :omni_tools, Omni.Tools.WebFetch,
+        max_output: 50_000,
+        timeout: 10_000
   """
 
   use Omni.Tool, name: "web_fetch"
