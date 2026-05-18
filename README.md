@@ -23,7 +23,7 @@ Add Omni Tools to your dependencies:
 ```elixir
 def deps do
   [
-    {:omni_tools, "~> 0.2"}
+    {:omni_tools, "~> 0.3"}
   ]
 end
 ```

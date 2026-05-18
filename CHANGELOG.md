@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-18
+
 ### Added
 
 - **WebSearch** — web search tool with a pluggable provider backend. Ships with Brave, Serper, and Tavily providers. API keys resolve via `{:system, "ENV_VAR"}` tuples (matching the omni provider pattern). The model can control result count and recency filtering; additional provider-specific options pass through as-is.
@@ -42,6 +44,7 @@ Initial release — a small, opinionated set of reference tools for the
 
 ---
 
-[Unreleased]: https://github.com/aaronrussell/omni_tools/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/aaronrussell/omni_tools/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/aaronrussell/omni_tools/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aaronrussell/omni_tools/releases/tag/v0.2.0
 [0.1.0]: https://github.com/aaronrussell/omni_tools/releases/tag/v0.1.0
