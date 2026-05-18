@@ -6,15 +6,13 @@
 
 **Ready-to-use tools for Omni-powered agents** — files, shell, REPL, web fetch, and web search. Built on [Omni](https://github.com/aaronrussell/omni).
 
-## Features
+## Tools
 
 - **Files** — scoped file CRUD with read-only and flat modes
 - **Bash** — shell command execution with timeout, environment, and output capture
 - **Repl** — Elixir code evaluation in isolated peer nodes with pluggable extensions
 - **WebFetch** — URL fetching with HTML-to-Markdown, JSON pretty-printing, and pluggable strategies
 - **WebSearch** — web search with pluggable providers (Brave, Serper, Tavily) and `{:system, "ENV_VAR"}` API key resolution
-- **Three-layer config** — module defaults → app config → explicit opts, with zero config required
-- **Reference quality** — clean, documented implementations you can use as-is or copy as starting points for custom tools
 
 ## Installation
 
